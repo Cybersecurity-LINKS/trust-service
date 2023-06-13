@@ -1,0 +1,153 @@
+openapi: 3.0.3
+info:
+  title: Trust service REST API
+  description: This document specifies the REST API for Trust service in MODERATE
+    platform.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+externalDocs:
+  description: Find out more about MODERATE
+  url: https://github.com/MODERATE-Project
+servers:
+- url: /
+tags:
+- name: Trust proofs
+  description: Everything about Trust proofs.
+- name: Decentralized identifiers
+  description: Everything about DID.
+paths:
+  /trust-proofs:
+    post:
+      tags:
+      - Trust proofs
+      summary: Create and publish a trust proof on the Tangle.
+      description: "Create and publish a trust proof on the Tangle. The received data\
+        \ will be signed with the keypair related to that DID, the DID must be of\
+        \ the owner. If not provided, it should be possible to retrieve it. A reference\
+        \ to the trust proof output will be stored and identified with a trustProofId,\
+        \ there should be a 1-1 relationship, between the trust proof and the asset."
+      operationId: trust_proofsPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrustProofRequest'
+        required: true
+      responses:
+        "200":
+          description: Successful operation.
+        "401":
+          description: Access token is missing or invalid
+      x-swagger-router-controller: TrustProofs
+  /trust-proofs/{trustProofId}:
+    get:
+      tags:
+      - Trust proofs
+      summary: Verify and return a trust proof
+      description: Returns the trust proof retrieved from the tangle. The method also
+        check the integrity on the system of the
+      operationId: trust_proofsTrustProofIdGET
+      parameters:
+      - name: trustProofId
+        in: path
+        description: Identifier of the trust proof.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustProofResponse'
+      x-swagger-router-controller: TrustProofs
+  /dids/:
+    post:
+      tags:
+      - Decentralized identifiers
+      summary: Create a DID and a DID document.
+      description: Create a DID and a DID document.
+      operationId: didsPOST
+      responses:
+        "200":
+          description: Successful operation.
+        "401":
+          description: Access token is missing or invalid
+      x-swagger-router-controller: DecentralizedIdentifiers
+  /dids/{did}:
+    get:
+      tags:
+      - Decentralized identifiers
+      summary: Retrieve the DID document from the tangle associated to that DID.
+      description: Retrieve the DID document from the tangle associated to that DID.
+      operationId: didsDidGET
+      parameters:
+      - name: did
+        in: path
+        description: A DID.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: did:iota:rms:0x6268d0021e16d6c928da7595b6b5e98712a152de9ccf9a20ed9771705b20e9a8
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DIDdocument'
+      x-swagger-router-controller: DecentralizedIdentifiers
+  /sign-data:
+    post:
+      tags:
+      - Decentralized identifiers
+      summary: Generate a signature for the provided data.
+      description: Generate a signature for the provided data. The signature can be
+        verified with the public key stored inside the DID document.
+      operationId: sign_dataPOST
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: string
+              format: binary
+        required: true
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DIDdocument'
+      x-swagger-router-controller: DecentralizedIdentifiers
+components:
+  schemas:
+    TrustProofRequest:
+      required:
+      - assetHash
+      - metadataHash
+      properties:
+        assetHash:
+          type: string
+          description: Hash of the asset for which the service will create a proof.
+        metadataHash:
+          type: string
+          description: Hash of the metadata of the asset
+        did:
+          type: string
+          description: DID of the
+      description: Input for building the Trust Proof
+    TrustProofResponse:
+      description: Trust proof in JWS format
+    DIDdocument:
+      description: A DID document
+  responses:
+    UnathorizedError:
+      description: Access token is missing or invalid
