@@ -1,19 +1,25 @@
-use actix_web::{web, HttpResponse, Responder, Result, get, post};
-use serde::Deserialize;
-use crate::models::proof_dto::ProofRequestDTO;
-
+use actix_web::{web, HttpResponse, Responder, get, post};
+use crate::dtos::proof_dto::ProofRequestDTO;
+use crate::services::proof_service::create_proof as create_proof_service;
 
 #[get("/{proof_id}")]
-async fn get_proof(info: web::Path<u32>) -> impl Responder {
+async fn get_proof(path: web::Path<u32>) -> impl Responder {
     HttpResponse::Ok().body(format!(
         "Proof: {}",
-        info.into_inner()
+        path.into_inner()
     ))
+
+    // HttpResponse::BadRequest().body("Bad data");
 }
 
-#[post("")]
+// TODO: add schema validation
+#[post("")] 
 async fn create_proof(req_body: web::Json<ProofRequestDTO>) -> impl Responder {
-    HttpResponse::Ok().body(req_body.metadata_hash.clone())
+    let resp = match  create_proof_service(req_body.into_inner()) {
+        Ok(_) => HttpResponse::Ok().body("ciao"),
+        Err(_) => HttpResponse::InternalServerError().finish()
+    };
+    resp
 }
 
 

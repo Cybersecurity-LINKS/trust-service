@@ -1,25 +1,27 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use trust_server::controllers::proof_controller;
+use actix_web::{web, App, HttpServer, middleware::Logger};
+use trust_server::controllers::{did_controller, proof_controller};
 use dotenv::dotenv;
-use std::{env, fmt::format};
+use std::env;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    env_logger::init();
     dotenv().ok();
+    env_logger::init();
 
-    let address = format!("{}:{}", env::var("ADDR").expect("$ADDR must be set."), env::var("PORT").expect("$PORT must be set.").parse::<u16>().unwrap());
+    let address = env::var("ADDR").expect("$ADDR must be set.");
+    let port = env::var("PORT").expect("$PORT must be set.").parse::<u16>().unwrap();
 
-    log::info!("Starting up on {}", address);
+    log::info!("Starting up on {}:{}", address, port);
     
     HttpServer::new(|| {
-        App::new().service(         
-            web::scope("/api")
-            .configure(proof_controller::scoped_config))
+        App::new()
+            .service(web::scope("/api")
+                .configure(did_controller::scoped_config)
+                .configure(proof_controller::scoped_config)
+            )
+            .wrap(Logger::default())
     })
-    .bind(address)?
+    .bind((address, port))?
     .run()
     .await
-    //&env::var("BIND_ADDR").expect("BIND_ADDR must be set.");, &env::var("BIND_PORT").unwrap()
-    
 }
