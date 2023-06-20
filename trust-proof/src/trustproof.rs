@@ -10,7 +10,7 @@ use serde_json::Value;
 use crypto::hashes::Digest;
 use identity_iota::crypto::Verify;
 use base64::{Engine as _, engine::{general_purpose}};
-use wasm_bindgen::prelude::*;
+// use wasm_bindgen::prelude::*;
 
 // #[wasm_bindgen(js_name = TrustProof, inspectable)]
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
