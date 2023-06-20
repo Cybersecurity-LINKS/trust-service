@@ -1,0 +1,35 @@
+[package]
+name = "trust-proof"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+identity_iota = "0.7.0-alpha.6"
+iota-wallet = "1.0.0-rc.5" # Apache-2.0 license
+tokio = { version = "1.20.1", default-features = false, features = ["rt"] }
+async-std = {version = "1.9.0", features = ["attributes"]}
+iota-client = { version = "2.0.1-rc.4", default-features = false, features = ["tls", "stronghold"] }
+primitive-types = "0.12.1"
+rand = "0.8.5"
+anyhow = "1.0.62"
+purity = { git = "https://github.com/Cybersecurity-LINKS/purity.git" }
+#purity = {path = "../purity/" }
+iota-crypto = {version = "0.17.0", default-features = false, features = ["ed25519", "random", "blake2b"]}
+serde_json = { version = "1.0", default-features = false }
+base64 = "0.21.0"
+serde = "1.0"
+dotenv = "0.15.0" # MIT license
+log = "0.4" # MIT OR Apache-2.0 license
+pretty_env_logger = "0.4" # MIT OR Apache-2.0 license
+hex = "0.4.3" # MIT OR Apache-2.0 license
+clearscreen = "2.0.1"
+colored_json = "3.1.0"
+colored = "2.0.0"
+wasm-bindgen = "0.2.87"
+
+[lib]
+name = "utils"
+path = "src/lib.rs"
