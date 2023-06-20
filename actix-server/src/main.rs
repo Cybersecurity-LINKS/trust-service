@@ -1,28 +1,25 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
-
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
-
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
+use trust_server::controllers::proof_controller;
+use dotenv::dotenv;
+use std::{env, fmt::format};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    env_logger::init();
+    dotenv().ok();
+
+    let address = format!("{}:{}", env::var("ADDR").expect("$ADDR must be set."), env::var("PORT").expect("$PORT must be set.").parse::<u16>().unwrap());
+
+    log::info!("Starting up on {}", address);
+    
     HttpServer::new(|| {
-        App::new()
-            .service(hello)
-            .service(echo)
-            .route("/hey", web::get().to(manual_hello))
+        App::new().service(         
+            web::scope("/api")
+            .configure(proof_controller::scoped_config))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(address)?
     .run()
     .await
+    //&env::var("BIND_ADDR").expect("BIND_ADDR must be set.");, &env::var("BIND_PORT").unwrap()
+    
 }
