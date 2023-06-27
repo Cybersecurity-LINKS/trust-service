@@ -1,6 +1,7 @@
 use actix_web::{web, HttpResponse, Responder, get, post};
 use crate::dtos::proof_dto::ProofRequestDTO;
 use crate::services::proof_service::create_proof as create_proof_service;
+use crate::AppIotaState;
 
 #[get("/{proof_id}")]
 async fn get_proof(path: web::Path<u32>) -> impl Responder {
@@ -14,9 +15,12 @@ async fn get_proof(path: web::Path<u32>) -> impl Responder {
 
 // TODO: add schema validation
 #[post("")] 
-async fn create_proof(req_body: web::Json<ProofRequestDTO>) -> impl Responder {
+async fn create_proof(req_body: web::Json<ProofRequestDTO>, data: web::Data<AppIotaState>) -> impl Responder {
     let resp = match  create_proof_service(req_body.into_inner()) {
-        Ok(_) => HttpResponse::Ok().body("ciao"),
+        Ok(_) => {
+            let app_name = &data.app_name; // <- get app_name
+            HttpResponse::Ok().body(format!("TODO: create_proof() - Hello {app_name}!"))
+        },
         Err(_) => HttpResponse::InternalServerError().finish()
     };
     resp
