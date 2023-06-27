@@ -1,22 +1,20 @@
 use actix_web::{web, HttpResponse, Responder, post};
-use identity_iota::prelude::{IotaDocument, KeyPair};
-use iota_client::block::address::Address;
+
 use crate::AppIotaState;
-use crate::utils::create_did as create_did_identity;
+use crate::services::did_service::create_did as create_did_service;
 
 #[post("")] 
 async fn create_did(data: web::Data<AppIotaState>) -> impl Responder {
-    let app_name = &data.app_name; // <- get app_name
     let mut secret_manager = data.secret_manager.lock().unwrap();
-    log::info!("Creating DID...");
-    let (_, iota_document, key_pair_connector): (Address, IotaDocument, KeyPair) =
-    match create_did_identity(&data.client, &mut secret_manager).await {
-        Ok(result) => result,
-        Err(error) => return HttpResponse::InternalServerError().body(error.to_string()),
-    };
-    log::info!("{:#}", iota_document);
 
-    HttpResponse::Ok().body(format!("TODO: create_did() - Hello {app_name}!"))
+    let resp = match create_did_service(&mut secret_manager).await {
+        Ok(_) => {
+            let app_name = &data.app_name; // <- get app_name
+            HttpResponse::Ok().body(format!("TODO: create_did() - Hello {app_name}!"))
+        },
+        Err(_) => HttpResponse::InternalServerError().finish()
+    };
+    resp
 }
 
 

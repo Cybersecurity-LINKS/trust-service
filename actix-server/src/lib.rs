@@ -9,6 +9,5 @@ pub mod utils;
 // This struct represents state
 pub struct AppIotaState {
     pub app_name: String,
-    pub secret_manager: Mutex<SecretManager>,
-    pub client: Client,
+    pub secret_manager: Mutex<SecretManager>
 }

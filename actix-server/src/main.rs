@@ -22,8 +22,7 @@ async fn main() -> std::io::Result<()> {
                         StrongholdSecretManager::builder()
                         .password("secure_password_2")
                         .build(random_stronghold_path()).unwrap(),
-                    )),
-                    client: Client::builder().with_primary_node(&env::var("NODE_URL").unwrap(), None).unwrap().finish().unwrap()
+                    ))                    
                 })
             )
             .service(web::scope("/api")
