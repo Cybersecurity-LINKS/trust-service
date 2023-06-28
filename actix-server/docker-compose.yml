@@ -1,0 +1,16 @@
+# TODO: correctly handle 
+# version: '3.9'
+# services:
+#   actix-trust-service:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     image: actix-trust-service
+#     hostname: actix-trust-service
+#     container_name: actix-trust-service
+#     restart: unless-stopped
+#     ports:
+#       - "8080:8080"
+#     secrets:
+#       - 
+     
