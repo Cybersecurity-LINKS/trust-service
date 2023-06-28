@@ -3,15 +3,17 @@ use anyhow::Result;
 use identity_iota::prelude::{IotaDocument, KeyPair};
 use iota_client::block::address::Address;
 use iota_client::secret::SecretManager;
+use iota_wallet::account_manager::{AccountManager, self};
 use crate::utils::create_did as create_did_identity;
 use iota_client::Client;
 
-pub async fn create_did(secret_manager: &mut SecretManager) -> Result<()>  {
+pub async fn create_did(account_manager: &mut AccountManager) -> Result<()>  {
 
+    let secret_manager = account_manager.get_secret_manager();
     let client = Client::builder().with_primary_node(&env::var("NODE_URL").unwrap(), None).unwrap().finish().unwrap();
     log::info!("Creating DID...");
     let (_, iota_document, key_pair_connector): (Address, IotaDocument, KeyPair) =
-    match create_did_identity(&client, secret_manager).await {
+    match create_did_identity(&client, &mut *secret_manager.write().await).await {
         Ok(result) => result,
         Err(error) => return Err(error)
     };

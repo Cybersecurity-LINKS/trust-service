@@ -23,6 +23,13 @@ use iota_client::secret::SecretManager;
 use iota_client::Client;
 use rand::distributions::DistString;
 
+use iota_wallet::{
+    iota_client::constants::SHIMMER_COIN_TYPE,
+    secret::{stronghold::StrongholdSecretManager, },
+    ClientOptions, Result, account_manager::AccountManager,
+};
+
+
 /// Creates a DID Document and publishes it in a new Alias Output.
 ///
 /// Its functionality is equivalent to the "create DID" example
@@ -169,4 +176,39 @@ pub fn random_stronghold_path() -> PathBuf {
   file.push(rand::distributions::Alphanumeric.sample_string(&mut rand::thread_rng(), 32));
   file.set_extension("stronghold");
   file.to_owned()
+}
+
+
+pub async fn setup_secret_manager(password: &str, path: &str, mnemonic: &str) -> Result<SecretManager> {
+  // Setup Stronghold secret_manager
+  let mut secret_manager = StrongholdSecretManager::builder()
+  .password(password)
+  .build(PathBuf::from(path))?;
+
+  // Only required the first time, can also be generated with `manager.generate_mnemonic()?`
+  // The mnemonic only needs to be stored the first time
+  match secret_manager.store_mnemonic(mnemonic.to_string()).await {
+    Ok(()) => log::info!("Stronghold mnemonic stored"),
+    Err(iota_client::Error::StrongholdMnemonicAlreadyStored) => log::info!("Stronghold mnemonic already stored"),
+    Err(error) => panic!("Error: {:?}", error)
+  }
+ 
+  Ok(SecretManager::Stronghold(secret_manager))
+}
+
+pub async fn setup_account_manager(secret_manager: SecretManager) -> Result<AccountManager> {
+
+  // Create the account manager with the secret_manager and client options
+  let client_options = ClientOptions::new()
+  .with_node(&env::var("NODE_URL")
+  .unwrap())?;
+
+  let account_manager = AccountManager::builder()
+      .with_secret_manager(secret_manager)
+      .with_client_options(client_options)
+      .with_coin_type(SHIMMER_COIN_TYPE)
+      .finish()
+      .await?;
+
+  Ok(account_manager)
 }

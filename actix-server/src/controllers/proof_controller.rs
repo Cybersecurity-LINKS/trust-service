@@ -18,8 +18,7 @@ async fn get_proof(path: web::Path<u32>) -> impl Responder {
 async fn create_proof(req_body: web::Json<ProofRequestDTO>, data: web::Data<AppIotaState>) -> impl Responder {
     let resp = match  create_proof_service(req_body.into_inner()) {
         Ok(_) => {
-            let app_name = &data.app_name; // <- get app_name
-            HttpResponse::Ok().body(format!("TODO: create_proof() - Hello {app_name}!"))
+            HttpResponse::Ok().body(format!("TODO: create_proof()"))
         },
         Err(_) => HttpResponse::InternalServerError().finish()
     };

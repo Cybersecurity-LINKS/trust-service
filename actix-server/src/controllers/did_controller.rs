@@ -5,12 +5,11 @@ use crate::services::did_service::create_did as create_did_service;
 
 #[post("")] 
 async fn create_did(data: web::Data<AppIotaState>) -> impl Responder {
-    let mut secret_manager = data.secret_manager.lock().unwrap();
+    let mut account_manager = data.account_manager.write().unwrap();
 
-    let resp = match create_did_service(&mut secret_manager).await {
+    let resp = match create_did_service(&mut account_manager).await {
         Ok(_) => {
-            let app_name = &data.app_name; // <- get app_name
-            HttpResponse::Ok().body(format!("TODO: create_did() - Hello {app_name}!"))
+            HttpResponse::Ok().body(format!("TODO: create_did()"))
         },
         Err(_) => HttpResponse::InternalServerError().finish()
     };
