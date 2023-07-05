@@ -169,16 +169,6 @@ async fn get_address_balance(client: &Client, address: &str) -> anyhow::Result<u
   Ok(total_amount)
 }
 
-/// Creates a random stronghold path in the temporary directory, whose exact location is OS-dependent.
-pub fn random_stronghold_path() -> PathBuf {
-  let mut file = std::env::temp_dir();
-  file.push("test_strongholds");
-  file.push(rand::distributions::Alphanumeric.sample_string(&mut rand::thread_rng(), 32));
-  file.set_extension("stronghold");
-  file.to_owned()
-}
-
-
 pub async fn setup_secret_manager(password: &str, path: &str, mnemonic: &str) -> Result<SecretManager> {
   // Setup Stronghold secret_manager
   let mut secret_manager = StrongholdSecretManager::builder()
