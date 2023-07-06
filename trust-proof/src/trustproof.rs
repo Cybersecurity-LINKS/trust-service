@@ -6,27 +6,22 @@ use identity_iota::crypto::Sign;
 use identity_iota::prelude::KeyPair;
 use serde::Serialize;
 use serde::Deserialize;
-use serde_json::Value;
 use crypto::hashes::Digest;
 use identity_iota::crypto::Verify;
 use base64::{Engine as _, engine::{general_purpose}};
-// use wasm_bindgen::prelude::*;
 
-// #[wasm_bindgen(js_name = TrustProof, inspectable)]
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct TrustProof {
-    offer_digest: String,
+    metadata_digest: String,
     dataset_digest: String,
     signature: String,
     pub did_publisher: String, //TODO: beware of pub
 }
 
-// #[wasm_bindgen(js_class = TrustProof)]
 impl TrustProof {
     
-    // #[wasm_bindgen(constructor)]
     pub fn new(
-        offer: &Value,
+        metadata_digest: &String,
         dataset: &String,
         key_pair_publisher: &KeyPair,
         did_publisher: String
@@ -34,10 +29,10 @@ impl TrustProof {
 
         // digest_offer = Hash(offerta), digest_dataset = Hash(Dataset), Sign(digest_offer+digest_dataset)
 
-        let digest_offer: [u8; 32] = Blake2b256::digest(offer.to_string().as_bytes()).as_slice().try_into().expect("Wrong length");
+        let digest_metadata: [u8; 32] = Blake2b256::digest(metadata_digest.as_bytes()).as_slice().try_into().expect("Wrong length");
         let digest_dataset: [u8; 32]  = Blake2b256::digest(dataset.as_bytes()).as_slice().try_into().expect("Wrong length");
 
-        let digests_sum = [digest_offer, digest_dataset];
+        let digests_sum = [digest_metadata, digest_dataset];
 
         let digests = digests_sum.concat();
 
@@ -55,7 +50,7 @@ impl TrustProof {
         }   
 
         Self{
-            offer_digest: general_purpose::STANDARD.encode(digest_offer), 
+            metadata_digest: general_purpose::STANDARD.encode(metadata_digest), 
             dataset_digest: general_purpose::STANDARD.encode(digest_dataset), 
             signature: general_purpose::STANDARD.encode(connector_signature),
             did_publisher: did_publisher,
@@ -63,11 +58,10 @@ impl TrustProof {
 
     }
 
-    // #[wasm_bindgen]
     pub fn verify(&self, publisher_public_key: &PublicKey) -> bool {
         
         let trust_metadata_to_verify = [
-            general_purpose::STANDARD.decode(&self.offer_digest).unwrap(), 
+            general_purpose::STANDARD.decode(&self.metadata_digest).unwrap(), 
             general_purpose::STANDARD.decode(&self.dataset_digest).unwrap()
         ].concat();
 

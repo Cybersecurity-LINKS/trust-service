@@ -1,5 +1,5 @@
 [package]
-name = "trust-proof"
+name = "proof"
 version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
@@ -31,5 +31,5 @@ colored = "2.0.0"
 wasm-bindgen = "0.2.87"
 
 [lib]
-name = "utils"
+name = "proof"
 path = "src/lib.rs"
