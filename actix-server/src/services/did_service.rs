@@ -1,21 +1,22 @@
 use std::env;
-use actix_web::web;
-use anyhow::Result;
+use anyhow::{Result, Context}
+;
 use identity_iota::did::DID;
 use identity_iota::iota::{IotaDocument};
 use identity_iota::prelude::KeyPair;
+
 use iota_client::block::address::Address;
-use iota_client::secret::SecretManager;
-use iota_wallet::account_manager::{AccountManager, self};
+use iota_client::Client;
+use iota_wallet::account_manager::{AccountManager};
+
+use mongodb::{Database, bson::doc};
+
 use crate::models::user::User;
 use crate::utils::create_did as create_did_identity;
-use iota_client::Client;
-use mongodb::{Client as MongoClient, Database, bson};
-use mongodb::bson::{doc, Bson};
+use crate::utils::request_faucet_funds;
+use crate::USER_COLL_NAME;
 
-const COLL_NAME: &str = "Users"; // TODO: define this somewhere else
-
-
+// TODO: handle failures and rollback
 pub async fn create_did(account_manager: &mut AccountManager, mongo_db: Database) -> Result<()>  {
 
     let secret_manager = account_manager.get_secret_manager();
@@ -31,10 +32,10 @@ pub async fn create_did(account_manager: &mut AccountManager, mongo_db: Database
     log::info!("{:#}", iota_document);
     
     log::info!("Storing information in db..."); // TODO: this will become a keycloak request   
-    let collection = mongo_db.collection::<User>(COLL_NAME); 
+    let collection = mongo_db.collection::<User>(USER_COLL_NAME); 
     
     // let user = doc! { "did": iota_document.id().as_str() , "private_key": hex::encode(key_pair_connector.private().as_ref()) };
-    let user = User { did: iota_document.id().to_string() , private_key: hex::encode(key_pair_connector.private().as_ref()) };
+    let user = User { did: iota_document.id().to_string() , private_key: hex::encode(key_pair_connector.private().as_ref()), proofs: None };
 
     let result = collection.insert_one(user, None).await;
     let _ = match result {
@@ -44,6 +45,22 @@ pub async fn create_did(account_manager: &mut AccountManager, mongo_db: Database
             return Err(error.into())
         }
     };
+
+    // Create a new account for that user
+    let account = account_manager
+        .create_account()
+        .with_alias(iota_document.id().to_string())
+        .finish()
+        .await?;
+
+    let addresses = account.generate_addresses(1, None).await?;
+    let address =  addresses[0].address();
+    request_faucet_funds(
+        &client,
+        address.as_ref().clone(),
+        client.get_bech32_hrp().await?.as_str(),
+        &env::var("FAUCET_URL").unwrap(),
+    ).await.context("Failed to request faucet funds")?;
 
     let filter = doc! {"did": iota_document.id().as_str()};
 

@@ -3,7 +3,7 @@ use mongodb::Client as MongoClient;
 
 use crate::AppIotaState;
 use crate::services::did_service::create_did as create_did_service;
-const DB_NAME: &str = "MODERATE";
+use crate::DB_NAME;
 
 #[post("")] 
 async fn create_did(app_iota_state: web::Data<AppIotaState>, mongo_client: web::Data<MongoClient>) -> impl Responder {

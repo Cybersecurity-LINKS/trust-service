@@ -16,3 +16,4 @@ Cargo.lock
 
 /walletdb/
 *.stronghold
+mongodb_data_container

@@ -29,3 +29,11 @@ https://rustwasm.github.io/docs/wasm-bindgen/web-sys/using-web-sys.html
 ```shell
 cargo watch -x run
 ```
+
+For testing the application with MongoDB, follow these steps:
+
+- Run `docker compose up -d` to start the MongoDB container.
+- Create a database called `MODERATE`.
+- Create a collection called `Users`.
+- Use [MongoDB Compass](https://www.mongodb.com/products/compass)s to view the database content.
+Note: MongoDB Compass is a tool that can be used to interact with MongoDB databases and inspect their content.

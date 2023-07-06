@@ -26,8 +26,9 @@ async fn main() -> anyhow::Result<()> {
     ).await?;
 
     let account_manager = Arc::new(RwLock::new(setup_account_manager(secret_manager).await?));
-    let mongo_uri = env::var("MONGODB_URI").unwrap_or_else(|_| format!("mongodb://{}:{}@localhost:27017", usr, pass) );
+    let mongo_uri = env::var("MONGODB_URI").unwrap_or_else(|_| format!("mongodb://{}:{}@localhost:27017", usr, pass));
     let mongo_client = MongoClient::with_uri_str(mongo_uri).await.expect("failed to connect");
+    //TODO: create an init function if the collections don't exist
     
     HttpServer::new(move || {
         App::new()
