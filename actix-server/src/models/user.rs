@@ -7,5 +7,5 @@ use super::proof::Proof;
 pub struct User{
     pub did: String,
     pub private_key: String,
-    pub proofs: Option<Vec<Proof>>
+    pub proofs: Vec<Proof>
 }

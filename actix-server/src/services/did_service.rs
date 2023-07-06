@@ -9,6 +9,7 @@ use iota_client::block::address::Address;
 use iota_client::Client;
 use iota_wallet::account_manager::{AccountManager};
 
+use mongodb::bson::Bson;
 use mongodb::{Database, bson::doc};
 
 use crate::models::user::User;
@@ -35,7 +36,7 @@ pub async fn create_did(account_manager: &mut AccountManager, mongo_db: Database
     let collection = mongo_db.collection::<User>(USER_COLL_NAME); 
     
     // let user = doc! { "did": iota_document.id().as_str() , "private_key": hex::encode(key_pair_connector.private().as_ref()) };
-    let user = User { did: iota_document.id().to_string() , private_key: hex::encode(key_pair_connector.private().as_ref()), proofs: None };
+    let user = User { did: iota_document.id().to_string() , private_key: hex::encode(key_pair_connector.private().as_ref()), proofs: vec![] };
 
     let result = collection.insert_one(user, None).await;
     let _ = match result {
