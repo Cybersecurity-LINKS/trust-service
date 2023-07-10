@@ -1,9 +1,7 @@
 # Trust service
 
-<div align="center">
-  [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-  ![Iota](https://img.shields.io/badge/iota-29334C?style=for-the-badge&logo=iota&logoColor=white)
-</div>
+![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
+![Iota](https://img.shields.io/badge/iota-29334C?style=for-the-badge&logo=iota&logoColor=white)
 
 ## Description
 
