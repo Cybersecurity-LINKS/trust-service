@@ -1,20 +1,24 @@
 use std::env;
+use std::str::FromStr;
 use anyhow::Result;
 use identity_iota::core::ToJson;
-use identity_iota::prelude::{KeyPair, KeyType};
+use identity_iota::crypto::PublicKey;
+use identity_iota::prelude::{KeyPair, KeyType, IotaDocument, IotaIdentityClientExt, IotaDID};
 use iota_client::Client;
+use iota_client::block::output::OutputId;
 use iota_wallet::account_manager::AccountManager;
 use mongodb::Database;
 use mongodb::bson::doc;
+use purity::utils::get_metadata;
 use crate::dtos::proof_dto::ProofRequestDTO;
 use crate::models::proof::Proof;
 use crate::{USER_COLL_NAME, PROOF_COLL_NAME, PROOF_TAG};
 use crate::models::user::User;
 use proof::trustproof::TrustProof;
 use purity::account::PurityAccountExt;
+use anyhow::anyhow;
 
-
-pub async fn create_proof(proof_dto: ProofRequestDTO, account_manager: &mut AccountManager, mongo_db: Database) -> Result<()>  {
+pub async fn create_proof(proof_dto: ProofRequestDTO, account_manager: &mut AccountManager, mongo_db: Database) -> Result<String>  {
     
     // let secret_manager = account_manager.get_secret_manager();
     // let client = Client::builder().with_primary_node(&env::var("NODE_URL").unwrap(), None).unwrap().finish().unwrap();
@@ -55,12 +59,7 @@ pub async fn create_proof(proof_dto: ProofRequestDTO, account_manager: &mut Acco
     ).await?;
 
     log::info!("Storing proof-asset relationship...");
-    // let collection = mongo_db.collection::<User>(USER_COLL_NAME); 
-    
     let proof = Proof { proof_id: trust_proof_id.to_string(), asset_id: proof_dto.asset_hash.clone()};
-
-    // let result = collection.insert_one(proof, None).await;
-
     let update = doc! {
         "$push": {
             "proofs": proof
@@ -68,16 +67,45 @@ pub async fn create_proof(proof_dto: ProofRequestDTO, account_manager: &mut Acco
     };
     let _result = collection.update_one(filter, update, None).await?;
 
-
-    // let _ = match result {
-    //     Ok(result) => result,
-    //     Err(error) => {
-    //         log::info!("{}", error);
-    //         return Err(error.into())
-    //     }
-    // };
-
     log::info!("...End");
-    Ok(())
-    // Err("Error".to_string())
+    Ok(trust_proof_id.to_string())
+}
+
+pub async fn get_proof(proof_id: String) -> Result<String> {
+
+    let client = Client::builder().with_primary_node(&env::var("NODE_URL")?, None)?.finish()?;
+    // Take the output ID from command line argument or use a default one.
+    let output_id = OutputId::from_str(&proof_id)?;
+
+    log::info!("Reading trust proof from the tangle...");    
+    let output_metadata = client.get_output(&output_id).await?;
+    // Extract metadata from output
+    let trust_proof: TrustProof = serde_json::from_slice(&get_metadata(output_metadata)?)?;
+    log::info!("{:#?}", trust_proof);
+    log::info!("{}/output/{}", std::env::var("EXPLORER_URL").unwrap(), &output_id);
+
+    
+    log::info!("Reading did document from the tangle...");
+    log::info!("{}/identity-resolver/{}", std::env::var("EXPLORER_URL").unwrap(), &trust_proof.did_publisher);
+    let publisher_document: IotaDocument = client.resolve_did(&IotaDID::from_str(trust_proof.did_publisher.as_str())?).await?;
+
+    let publisher_public_key = PublicKey::from(
+        publisher_document.core_document()
+        .verification_method()
+        .first()
+        .unwrap()
+        .data()
+        .try_decode()
+        .unwrap()
+    );
+
+    log::info!("Verifying proof...");
+    match trust_proof.verify(&publisher_public_key) {
+        Ok(_) =>  serde_json::to_string(&trust_proof).map_err(anyhow::Error::from),
+        Err(e) => {
+            log::info!("{}", e);
+            //TODO: define custom error
+            Err(anyhow!("Proof verification failed"))
+        }
+    }
 }

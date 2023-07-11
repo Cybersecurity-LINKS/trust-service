@@ -24,6 +24,7 @@ async fn main() -> anyhow::Result<()> {
         &env::var("STRONGHOLD_PATH").unwrap(),
         &env::var("NON_SECURE_MNEMONIC").unwrap()
     ).await?;
+    // TODO: request funds at the start if balance is low 
 
     let account_manager = Arc::new(RwLock::new(setup_account_manager(secret_manager).await?));
     let mongo_uri = env::var("MONGODB_URI").unwrap_or_else(|_| format!("mongodb://{}:{}@localhost:27017", usr, pass));

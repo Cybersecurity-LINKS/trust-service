@@ -38,13 +38,18 @@ pub async fn create_did(
   client: &Client,
   secret_manager: &mut SecretManager,
 ) -> anyhow::Result<(Address, IotaDocument, KeyPair)> {
-  let address: Address = get_address_with_funds(
-      client, 
-      secret_manager, 
-      &env::var("FAUCET_URL").unwrap()
-    )
-    .await
-    .context("failed to get address with funds")?;
+  // TODO: check and eventually remove this
+  // let address: Address = get_address_with_funds(
+  //     client, 
+  //     secret_manager, 
+  //     &env::var("FAUCET_URL").unwrap()
+  //   )
+  //   .await
+  //   .context("failed to get address with funds")?;
+
+  // let address: Address = get_address(client, secret_manager).await?;
+  let address = client.get_addresses(secret_manager).with_range(0..1).get_raw().await?[0];
+
 
   let network_name: NetworkName = client.network_name().await?;
 

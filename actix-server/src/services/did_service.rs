@@ -3,7 +3,7 @@ use anyhow::{Result, Context}
 ;
 use identity_iota::did::DID;
 use identity_iota::iota::{IotaDocument};
-use identity_iota::prelude::KeyPair;
+use identity_iota::prelude::{KeyPair, IotaIdentityClientExt, IotaDID};
 
 use iota_client::block::address::Address;
 use iota_client::Client;
@@ -18,7 +18,7 @@ use crate::utils::request_faucet_funds;
 use crate::USER_COLL_NAME;
 
 // TODO: handle failures and rollback
-pub async fn create_did(account_manager: &mut AccountManager, mongo_db: Database) -> Result<()>  {
+pub async fn create_did(account_manager: &mut AccountManager, mongo_db: Database) -> Result<String>  {
 
     let secret_manager = account_manager.get_secret_manager();
     let client = Client::builder().with_primary_node(&env::var("NODE_URL").unwrap(), None).unwrap().finish().unwrap();
@@ -48,14 +48,18 @@ pub async fn create_did(account_manager: &mut AccountManager, mongo_db: Database
     };
 
     // Create a new account for that user
+    log::info!("Creating new account into the wallet...");
     let account = account_manager
         .create_account()
         .with_alias(iota_document.id().to_string())
         .finish()
         .await?;
 
+    log::info!("Generating an address for the account...");
     let addresses = account.generate_addresses(1, None).await?;
     let address =  addresses[0].address();
+    // TODO: check and eventually remove this 
+    log::info!("Requesting funds...");
     request_faucet_funds(
         &client,
         address.as_ref().clone(),
@@ -63,18 +67,25 @@ pub async fn create_did(account_manager: &mut AccountManager, mongo_db: Database
         &env::var("FAUCET_URL").unwrap(),
     ).await.context("Failed to request faucet funds")?;
 
-    let filter = doc! {"did": iota_document.id().as_str()};
+    // let filter = doc! {"did": iota_document.id().as_str()};
 
-    let result = collection.find_one(Some(filter), None).await.unwrap();
+    // let result = collection.find_one(Some(filter), None).await.unwrap();
     
-    match result {
-        Some(user) => {
-            println!("{:?}", user)
-        },
-        None => println!("No document found"),
-    }
+    // match result {
+    //     Some(user) => {
+    //         println!("{:?}", user)
+    //     },
+    //     None => println!("No document found"),
+    // }
 
     
 
-    Ok(())
+    Ok(iota_document.id().to_string())
+}
+
+pub async fn get_did_doc(did: String) -> Result<String> {
+    let client = Client::builder().with_primary_node(&env::var("NODE_URL").unwrap(), None).unwrap().finish().unwrap();
+    log::info!("Resolving did...");
+    let iota_document: IotaDocument = client.resolve_did(&IotaDID::try_from(did.as_str()).unwrap()).await?;
+    Ok(iota_document.to_string())
 }
