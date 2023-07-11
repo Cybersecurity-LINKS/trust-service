@@ -7,6 +7,7 @@ pub mod dtos;
 pub mod services;
 pub mod models;
 pub mod utils;
+pub mod errors;
 
 const PROOF_TAG: &str = "proofs-2";
 const DB_NAME: &str = "MODERATE";
