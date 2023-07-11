@@ -11,7 +11,7 @@ externalDocs:
   description: Find out more about MODERATE
   url: https://github.com/MODERATE-Project
 servers:
-- url: /
+- url: http://127.0.0.1:8080/api
 tags:
 - name: Trust proofs
   description: Everything about Trust proofs.
