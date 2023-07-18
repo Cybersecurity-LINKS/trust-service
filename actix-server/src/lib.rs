@@ -12,7 +12,6 @@ pub mod errors;
 const PROOF_TAG: &str = "proofs-2";
 const DB_NAME: &str = "MODERATE";
 const USER_COLL_NAME: &str = "Users"; // TODO: define this somewhere else
-const PROOF_COLL_NAME: &str = "Proofs"; // TODO: define this somewhere else
 
 
 // This struct represents state

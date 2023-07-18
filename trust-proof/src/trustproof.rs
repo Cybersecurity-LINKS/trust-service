@@ -8,7 +8,7 @@ use serde::Serialize;
 use serde::Deserialize;
 use crypto::hashes::Digest;
 use identity_iota::crypto::Verify;
-use base64::{Engine as _, engine::{general_purpose}};
+use base64::{Engine as _, engine::general_purpose};
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]

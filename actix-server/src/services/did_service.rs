@@ -17,6 +17,13 @@ use crate::utils::create_did as create_did_identity;
 use crate::utils::request_faucet_funds;
 use crate::USER_COLL_NAME;
 
+
+use aes_gcm::{
+    aead::{Aead, AeadCore, KeyInit, OsRng},
+    Aes256Gcm, Nonce, Key // Or `Aes128Gcm`
+};
+use base64::{Engine as _, engine::general_purpose};
+
 // TODO: handle failures and rollback
 pub async fn create_did(account_manager: &mut AccountManager, mongo_db: Database) -> Result<String>  {
 
@@ -35,8 +42,16 @@ pub async fn create_did(account_manager: &mut AccountManager, mongo_db: Database
     log::info!("Storing information in db..."); // TODO: this will become a keycloak request   
     let collection = mongo_db.collection::<User>(USER_COLL_NAME); 
     
+    //TODO: understand if this should be in global state
+    let aes_key_vec = general_purpose::STANDARD.decode(&env::var("ENC_KEY").expect("$ENC_KEY must be set."))?;
+    let aes_key = Key::<Aes256Gcm>::from_slice(aes_key_vec.as_slice());
+    let cipher = Aes256Gcm::new(aes_key);
+    let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
+
     // let user = doc! { "did": iota_document.id().as_str() , "private_key": hex::encode(key_pair_connector.private().as_ref()) };
-    let user = User { did: iota_document.id().to_string() , private_key: hex::encode(key_pair_connector.private().as_ref()), proofs: vec![] };
+    // let user = User { did: iota_document.id().to_string(), private_key: hex::encode(key_pair_connector.private().as_ref()), proofs: vec![] };
+    log::info!("sk: {:?}", key_pair_connector.private().as_ref());
+    let user = User { did: iota_document.id().to_string(), nonce: nonce.to_vec(),  private_key: cipher.encrypt(&nonce, key_pair_connector.private().as_ref()).unwrap(), proofs: vec![] };
 
     let result = collection.insert_one(user, None).await;
     let _ = match result {

@@ -6,6 +6,13 @@ use super::proof::Proof;
 #[serde(rename_all = "camelCase")]
 pub struct User{
     pub did: String,
-    pub private_key: String,
+    pub nonce: Vec<u8>,
+    pub private_key:  Vec<u8>,
     pub proofs: Vec<Proof>
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectedUser {
+    pub proof: Proof
 }

@@ -16,7 +16,6 @@ async fn main() -> anyhow::Result<()> {
 
     let usr = env::var("MONGO_INITDB_ROOT_USERNAME").expect("$MONGO_INITDB_ROOT_USERNAME must be set.");
     let pass = env::var("MONGO_INITDB_ROOT_PASSWORD").expect("$MONGO_INITDB_ROOT_PASSWORD must be set.");
-
     log::info!("Starting up on {}:{}", address, port);
 
     let secret_manager = setup_secret_manager(

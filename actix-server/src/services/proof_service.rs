@@ -1,5 +1,6 @@
 use std::env;
 use std::str::FromStr;
+use aes_gcm::aead::generic_array::GenericArray;
 use anyhow::Result;
 use identity_iota::core::ToJson;
 use identity_iota::crypto::PublicKey;
@@ -9,21 +10,30 @@ use iota_client::block::output::OutputId;
 use iota_wallet::account_manager::AccountManager;
 use mongodb::Database;
 use mongodb::bson::doc;
+use mongodb::options::FindOneOptions;
 use purity::utils::get_metadata;
 use crate::dtos::proof_dto::ProofRequestDTO;
 use crate::models::proof::Proof;
-use crate::{USER_COLL_NAME, PROOF_COLL_NAME, PROOF_TAG};
-use crate::models::user::User;
+use crate::{USER_COLL_NAME, PROOF_TAG};
+use crate::models::user::{User, ProjectedUser};
 use proof::trustproof::TrustProof;
 use purity::account::PurityAccountExt;
 use anyhow::anyhow;
+
+use aes_gcm::{
+    aead::{Aead, AeadCore, KeyInit, OsRng},
+    Aes256Gcm, Nonce, Key // Or `Aes128Gcm`
+};
+use base64::{Engine as _, engine::general_purpose};
+
+// use ciborium::into_writer;
+// use ciborium::from_reader;
+
 
 pub async fn create_proof(proof_dto: ProofRequestDTO, account_manager: &mut AccountManager, mongo_db: Database) -> Result<String>  {
     
     // let secret_manager = account_manager.get_secret_manager();
     // let client = Client::builder().with_primary_node(&env::var("NODE_URL").unwrap(), None).unwrap().finish().unwrap();
-
-
 
     log::info!("Getting User information from db..."); // TODO: this will become a keycloak request   
     let collection = mongo_db.collection::<User>(USER_COLL_NAME); 
@@ -33,7 +43,17 @@ pub async fn create_proof(proof_dto: ProofRequestDTO, account_manager: &mut Acco
     let user = collection.find_one(Some(filter.clone()), None).await.unwrap().unwrap();
 
 
-    let key_pair = KeyPair::try_from_private_key_bytes(KeyType::Ed25519, hex::decode(user.private_key).unwrap().as_slice()).unwrap();
+    
+    //TODO: understand if this should be in global state
+    let aes_key_vec = general_purpose::STANDARD.decode(&env::var("ENC_KEY").expect("$ENC_KEY must be set."))?;
+    let aes_key = Key::<Aes256Gcm>::from_slice(aes_key_vec.as_slice());
+    let cipher = Aes256Gcm::new(aes_key);
+
+    let sk_bytes = cipher.decrypt(&GenericArray::clone_from_slice( user.nonce.as_slice()), user.private_key.as_ref()).unwrap();
+    log::info!("Dec sk: {:?}",sk_bytes);
+    let key_pair = KeyPair::try_from_private_key_bytes(KeyType::Ed25519, &sk_bytes).unwrap();
+    // let key_pair = KeyPair::try_from_private_key_bytes(KeyType::Ed25519, hex::decode(user.private_key).unwrap().as_slice()).unwrap();
+
 
     log::info!("Creating trust proof...");
     let proof = TrustProof::new(
@@ -44,17 +64,23 @@ pub async fn create_proof(proof_dto: ProofRequestDTO, account_manager: &mut Acco
     );
 
     // Read tag
-    log::info!("\n{:?}\n", proof);
+    log::info!("\n{:#?}", proof);
 
     log::info!("Publishing trust proof msg...");
     let account = account_manager.get_account(did.to_string()).await?;
     let _ = account.sync(None).await?;
     let bech32_address = account.addresses().await?[0].address().to_bech32();
 
+    // CBOR
+    // let mut cbor_proof = Vec::new();
+    // into_writer(&proof, &mut cbor_proof)?;
+    // log::info!("CBOR:\n{:?}", cbor_proof);
+
     let trust_proof_id = account.write_data( 
         bech32_address, 
         PROOF_TAG, 
-        proof.to_json()?.as_str().as_bytes().to_vec(),
+        // cbor_proof,
+        proof.to_json()?.as_str().as_bytes().to_vec(), 
         None
     ).await?;
 
@@ -71,6 +97,7 @@ pub async fn create_proof(proof_dto: ProofRequestDTO, account_manager: &mut Acco
     Ok(trust_proof_id.to_string())
 }
 
+//TODO: handle not found
 pub async fn get_proof(proof_id: String) -> Result<String> {
 
     let client = Client::builder().with_primary_node(&env::var("NODE_URL")?, None)?.finish()?;
@@ -79,9 +106,14 @@ pub async fn get_proof(proof_id: String) -> Result<String> {
 
     log::info!("Reading trust proof from the tangle...");    
     let output_metadata = client.get_output(&output_id).await?;
+
+    // CBOR
+    // let trust_proof: TrustProof = from_reader(get_metadata(output_metadata.clone())?.as_slice())?;
+    // log::info!("CBOR:\n{:?}",trust_proof);
+    
     // Extract metadata from output
     let trust_proof: TrustProof = serde_json::from_slice(&get_metadata(output_metadata)?)?;
-    log::info!("{:#?}", trust_proof);
+    log::info!("\n{:#?}", trust_proof);
     log::info!("{}/output/{}", std::env::var("EXPLORER_URL").unwrap(), &output_id);
 
     
@@ -108,4 +140,42 @@ pub async fn get_proof(proof_id: String) -> Result<String> {
             Err(anyhow!("Proof verification failed"))
         }
     }
+}
+
+pub async fn get_proof_by_asset(asset_id: String, mongo_db: Database) -> Result<String> {
+
+    log::info!("Getting Asset information from db..."); // TODO: this will become a keycloak request   
+    let collection = mongo_db.collection::<User>(USER_COLL_NAME); 
+    let proof = collection.clone_with_type::<String>();
+    log::info!("Searching for asset: {:#?}", asset_id);
+
+    // Define the filter query
+    let filter = doc! {
+        "proofs": {
+          "$elemMatch": {
+            "assetId": asset_id.clone()
+          }
+        }
+    };
+
+    // Define the projection query
+    // Use FindOptions::builder() to set the projection
+    let find_options = FindOneOptions::builder().projection(doc! {
+        "proofs.$": 1,
+        // "proofs.proofId":1,
+        // "_id": 0
+    }).build();
+
+    match proof.find_one(Some(filter), find_options).await {
+        Ok(o_user) => {
+            if o_user.is_some() {
+                log::info!("{:#?}", Some(o_user))
+            } else {
+                log::info!("No asset found with id: {}", asset_id)
+            }
+        },
+        Err(err) => log::info!("Error: {}", err)
+    }
+    // get_proof(proof_id).await
+    Ok("ciao".to_string())
 }

@@ -25,7 +25,15 @@ mongodb = "2.6.0"
 hex = "0.4.3"
 uuid = "1.4.0"
 serde_json = "1.0.100"
+aes-gcm = "0.10.2"
+base64 = "0.21.0"
+ciborium = "0.2.1"
 
 [lib]
 name = "trust_server"
 path = "src/lib.rs"
+
+
+[[bin]]
+name = "gen-key"
+path = "src/bin/key_gen.rs"
