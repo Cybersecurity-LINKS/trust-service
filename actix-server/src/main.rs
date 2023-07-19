@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 Fondazione LINKS
+//
+// SPDX-License-Identifier: APACHE-2.0
+
 use std::{env, sync::{Mutex, RwLock, Arc}, path::PathBuf, fmt::format};
 use actix_web::{web, App, HttpServer, middleware::Logger};
 use iota_client::{secret::{SecretManager, stronghold::{StrongholdSecretManager, self}}, Client};

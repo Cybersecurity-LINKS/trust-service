@@ -174,6 +174,10 @@ async fn get_address_balance(client: &Client, address: &str) -> anyhow::Result<u
   Ok(total_amount)
 }
 
+// SPDX-FileCopyrightText: 2023 Fondazione LINKS
+//
+// SPDX-License-Identifier: APACHE-2.0
+
 pub async fn setup_secret_manager(password: &str, path: &str, mnemonic: &str) -> Result<SecretManager> {
   // Setup Stronghold secret_manager
   let mut secret_manager = StrongholdSecretManager::builder()

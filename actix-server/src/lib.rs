@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 Fondazione LINKS
+//
+// SPDX-License-Identifier: APACHE-2.0
+
 use iota_client::{secret::SecretManager, Client};
 use iota_wallet::account_manager::AccountManager;
 use std::sync::{Mutex, RwLock, Arc};

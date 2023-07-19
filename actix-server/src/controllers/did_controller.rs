@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 Fondazione LINKS
+//
+// SPDX-License-Identifier: APACHE-2.0
+
 use actix_web::get;
 use actix_web::{web, HttpResponse, Responder, post};
 use mongodb::Client as MongoClient;

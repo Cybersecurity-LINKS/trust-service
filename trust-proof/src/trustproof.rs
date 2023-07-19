@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 Fondazione LINKS
+//
+// SPDX-License-Identifier: APACHE-2.0
+
 use crypto::hashes::blake2b::Blake2b256;
 use identity_iota::crypto::Ed25519;
 use identity_iota::crypto::PublicKey;
