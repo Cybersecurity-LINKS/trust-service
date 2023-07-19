@@ -16,10 +16,11 @@ use mongodb::Database;
 use mongodb::bson::doc;
 use mongodb::options::FindOneOptions;
 use purity::utils::get_metadata;
+use serde_json::Value;
 use crate::dtos::proof_dto::ProofRequestDTO;
 use crate::models::proof::Proof;
 use crate::{USER_COLL_NAME, PROOF_TAG};
-use crate::models::user::{User, ProjectedUser};
+use crate::models::user::User;
 use proof::trustproof::TrustProof;
 use purity::account::PurityAccountExt;
 use anyhow::anyhow;
@@ -150,7 +151,7 @@ pub async fn get_proof_by_asset(asset_id: String, mongo_db: Database) -> Result<
 
     log::info!("Getting Asset information from db..."); // TODO: this will become a keycloak request   
     let collection = mongo_db.collection::<User>(USER_COLL_NAME); 
-    let proof = collection.clone_with_type::<String>();
+    let projected_collection = collection.clone_with_type::<Value>();
     log::info!("Searching for asset: {:#?}", asset_id);
 
     // Define the filter query
@@ -166,20 +167,20 @@ pub async fn get_proof_by_asset(asset_id: String, mongo_db: Database) -> Result<
     // Use FindOptions::builder() to set the projection
     let find_options = FindOneOptions::builder().projection(doc! {
         "proofs.$": 1,
-        // "proofs.proofId":1,
-        // "_id": 0
+        "_id": 0
     }).build();
 
-    match proof.find_one(Some(filter), find_options).await {
-        Ok(o_user) => {
-            if o_user.is_some() {
-                log::info!("{:#?}", Some(o_user))
+    let proof_id = match projected_collection.find_one(Some(filter), find_options).await {
+        Ok(Some(user)) => {
+            if let Some(proof_id) = user["proofs"][0]["proofId"].as_str() {
+                log::info!("proofId: {}", proof_id);
+                Ok(proof_id.to_owned())
             } else {
-                log::info!("No asset found with id: {}", asset_id)
-            }
+                Err(anyhow!("ProofId not found in the document."))
+            }      
         },
-        Err(err) => log::info!("Error: {}", err)
-    }
-    // get_proof(proof_id).await
-    Ok("ciao".to_string())
+        Ok(None) => Err(anyhow!("No asset found with id: {}", asset_id)),
+        Err(err) => Err(anyhow!("Error: {}", err))
+    };
+    get_proof(proof_id?).await
 }

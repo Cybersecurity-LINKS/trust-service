@@ -32,6 +32,7 @@ impl TrustProof {
         did_publisher: String
     ) -> Self {
 
+        // TODO: (case 1 we receive the hash computed from another service) if the input are already a digest, is this necessary?
         let digest_metadata: [u8; 32] = Blake2b256::digest(metadata_digest.as_bytes()).as_slice().try_into().expect("Wrong length");
         let digest_dataset: [u8; 32]  = Blake2b256::digest(dataset_digest.as_bytes()).as_slice().try_into().expect("Wrong length");
 
