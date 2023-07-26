@@ -37,6 +37,7 @@ use iota_wallet::{
 pub async fn create_did(
   client: &Client,
   secret_manager: &mut SecretManager,
+  governor_address: Address
 ) -> anyhow::Result<(Address, IotaDocument, KeyPair)> {
   // TODO: check and eventually remove this
   // let address: Address = get_address_with_funds(
@@ -48,18 +49,18 @@ pub async fn create_did(
   //   .context("failed to get address with funds")?;
 
   // let address: Address = get_address(client, secret_manager).await?;
-  let address = client.get_addresses(secret_manager).with_range(0..1).get_raw().await?[0];
+  // let address = client.get_addresses(secret_manager).with_range(0..1).get_raw().await?[0];
 
 
   let network_name: NetworkName = client.network_name().await?;
 
   let (document, key_pair): (IotaDocument, KeyPair) = create_did_document(&network_name)?;
 
-  let alias_output: AliasOutput = client.new_did_output(address, document, None).await?;
+  let alias_output: AliasOutput = client.new_did_output(governor_address, document, None).await?;
 
   let document: IotaDocument = client.publish_did_output(secret_manager, alias_output).await?;
 
-  Ok((address, document, key_pair))
+  Ok((governor_address, document, key_pair))
 }
 
 /// Creates an example DID document with the given `network_name`.
@@ -203,11 +204,33 @@ pub async fn setup_account_manager(secret_manager: SecretManager) -> Result<Acco
   .unwrap())?;
 
   let account_manager = AccountManager::builder()
-      .with_secret_manager(secret_manager)
-      .with_client_options(client_options)
-      .with_coin_type(SHIMMER_COIN_TYPE)
-      .finish()
-      .await?;
+    .with_secret_manager(secret_manager)
+    .with_client_options(client_options)
+    .with_coin_type(SHIMMER_COIN_TYPE)
+    .finish()
+    .await?;
+
+    // // TODO: create or retrieve a main account
+    // log::info!("Creating new account into the wallet...");
+    // // let server_account = account_manager.create_account()
+    // //     .with_alias("main-account".to_string())
+    // //     .finish()
+    // //     .await.unwrap();
+    // let server_account = account_manager.get_account("main-account".to_string()).await.unwrap();
+    // let _ = server_account.sync(None).await.unwrap();
+
+    // log::info!("Generating an address for the account...");
+    // let addresses = server_account.generate_addresses(1, None).await.unwrap();
+    // let address =  addresses[0].address().as_ref().clone();
+    // log::info!("Address generate... {:?}", address);
+
+    // log::info!("Requesting funds...");
+    // request_faucet_funds(
+    //     &client,
+    //     address.clone(),
+    //     client.get_bech32_hrp().await?.as_str(),
+    //     &env::var("FAUCET_URL").unwrap(),
+    // ).await.context("Failed to request faucet funds")?;
 
   Ok(account_manager)
 }

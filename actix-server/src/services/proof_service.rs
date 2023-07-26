@@ -55,7 +55,7 @@ pub async fn create_proof(proof_dto: ProofRequestDTO, account_manager: &mut Acco
     let cipher = Aes256Gcm::new(aes_key);
 
     let sk_bytes = cipher.decrypt(&GenericArray::clone_from_slice( user.nonce.as_slice()), user.private_key.as_ref()).unwrap();
-    log::info!("Dec sk: {:?}",sk_bytes);
+    log::info!("sk: {:?}",sk_bytes);
     let key_pair = KeyPair::try_from_private_key_bytes(KeyType::Ed25519, &sk_bytes).unwrap();
     // let key_pair = KeyPair::try_from_private_key_bytes(KeyType::Ed25519, hex::decode(user.private_key).unwrap().as_slice()).unwrap();
 

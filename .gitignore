@@ -14,6 +14,6 @@ Cargo.lock
 *.pdb
 
 
-/walletdb/
+walletdb
 *.stronghold
 mongodb_data_container

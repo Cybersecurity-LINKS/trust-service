@@ -28,7 +28,7 @@ paths:
         \ the owner. If not provided, it should be possible to retrieve it. A reference\
         \ to the trust proof output will be stored and identified with a trustProofId,\
         \ there should be a 1-1 relationship, between the trust proof and the asset."
-      operationId: trust_proofsPOST
+      operationId: create_proof
       requestBody:
         content:
           application/json:
@@ -41,6 +41,30 @@ paths:
         "401":
           description: Access token is missing or invalid
       x-swagger-router-controller: TrustProofs
+    get:
+      tags:
+      - Trust proofs
+      summary: Verify and return a trust proof given an asset id (as a query params)
+      description: Returns the trust proof retrieved from the tangle. The method also
+        check the integrity on the system of the
+      operationId: get_proof_by_asset
+      parameters:
+        - in: path
+          name: assetId
+          description: Identifier of the asset.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustProofResponse'
+      x-swagger-router-controller: TrustProofs
   /trust-proofs/{trustProofId}:
     get:
       tags:
@@ -48,7 +72,7 @@ paths:
       summary: Verify and return a trust proof
       description: Returns the trust proof retrieved from the tangle. The method also
         check the integrity on the system of the
-      operationId: trust_proofsTrustProofIdGET
+      operationId: get_proof
       parameters:
       - name: trustProofId
         in: path
@@ -66,13 +90,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/TrustProofResponse'
       x-swagger-router-controller: TrustProofs
-  /dids/:
+  /dids:
     post:
       tags:
       - Decentralized identifiers
       summary: Create a DID and a DID document.
       description: Create a DID and a DID document.
-      operationId: didsPOST
+      operationId: create_did
       responses:
         "200":
           description: Successful operation.
@@ -85,7 +109,7 @@ paths:
       - Decentralized identifiers
       summary: Retrieve the DID document from the tangle associated to that DID.
       description: Retrieve the DID document from the tangle associated to that DID.
-      operationId: didsDidGET
+      operationId: get_did_doc
       parameters:
       - name: did
         in: path

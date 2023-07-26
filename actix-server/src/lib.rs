@@ -13,10 +13,10 @@ pub mod models;
 pub mod utils;
 pub mod errors;
 
-const PROOF_TAG: &str = "proofs-2";
-const DB_NAME: &str = "MODERATE";
+const PROOF_TAG: &str = "proofs-2"; // TODO: define this somewhere else
+const DB_NAME: &str = "MODERATE"; // TODO: define this somewhere else
 const USER_COLL_NAME: &str = "Users"; // TODO: define this somewhere else
-
+const MAIN_ACCOUNT: &str = "main-account";
 
 // This struct represents state
 pub struct AppIotaState {

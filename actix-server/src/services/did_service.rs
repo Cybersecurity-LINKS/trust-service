@@ -19,7 +19,7 @@ use mongodb::{Database, bson::doc};
 use crate::models::user::User;
 use crate::utils::create_did as create_did_identity;
 use crate::utils::request_faucet_funds;
-use crate::USER_COLL_NAME;
+use crate::{USER_COLL_NAME, MAIN_ACCOUNT};
 
 
 use aes_gcm::{
@@ -30,6 +30,10 @@ use base64::{Engine as _, engine::general_purpose};
 
 // TODO: handle failures and rollback
 pub async fn create_did(account_manager: &mut AccountManager, mongo_db: Database) -> Result<String>  {
+    let account = account_manager.get_account(MAIN_ACCOUNT).await?;
+    let _ = account.sync(None).await?;
+    let governor_address = account.addresses().await?[0].address().clone();
+    log::info!("Main account address: {}", governor_address.bech32_hrp());
 
     let secret_manager = account_manager.get_secret_manager();
     let client = Client::builder().with_primary_node(&env::var("NODE_URL").unwrap(), None).unwrap().finish().unwrap();
@@ -37,9 +41,15 @@ pub async fn create_did(account_manager: &mut AccountManager, mongo_db: Database
     log::info!("Creating DID...");
 
     let (_, iota_document, key_pair_connector): (Address, IotaDocument, KeyPair) =
-        match create_did_identity(&client, &mut *secret_manager.write().await).await {
-            Ok(result) => result,
-            Err(error) => return Err(error)
+        match create_did_identity(&client, &mut *secret_manager.write().await, governor_address.as_ref().clone()).await {
+            Ok(result) => {
+                let _ = account.sync(None).await?;
+                result
+            },
+            Err(error) => {
+                log::info!("{:?}", error);
+                return Err(error)
+            }
         };
     log::info!("{:#}", iota_document);
     
