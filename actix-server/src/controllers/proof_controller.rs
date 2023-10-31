@@ -14,6 +14,7 @@ use crate::services::proof_service::get_proof_by_asset as get_proof_by_asset_ser
 
 use crate::AppIotaState;
 use crate::DB_NAME;
+use crate::storage::StorageType;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -37,9 +38,8 @@ async fn get_proof(path: web::Path<String>) -> impl Responder {
 // otherwise a 400 Bad Request error response is returned
 //TODO: when sending a request the url should be encoded
 #[get("")]
-async fn get_proof_by_asset(info: web::Query<Info>, mongo_client: web::Data<MongoClient>) -> impl Responder {
-    let db: mongodb::Database = mongo_client.database(DB_NAME); // .expect("could not connect to database appdb");
-    let resp = match get_proof_by_asset_service(info.asset_id.clone(), db).await {
+async fn get_proof_by_asset(info: web::Query<Info>, storage: web::Data<StorageType>) -> impl Responder {
+    let resp = match get_proof_by_asset_service(info.asset_id.clone(),storage.as_ref()).await {
         Ok(proof) => {
             HttpResponse::Ok().body(proof)
         },
@@ -50,10 +50,9 @@ async fn get_proof_by_asset(info: web::Query<Info>, mongo_client: web::Data<Mong
 
 // TODO: add schema validation
 #[post("")] 
-async fn create_proof(req_body: web::Json<ProofRequestDTO>, app_iota_state: web::Data<AppIotaState>, mongo_client: web::Data<MongoClient>) -> impl Responder {
+async fn create_proof(req_body: web::Json<ProofRequestDTO>, app_iota_state: web::Data<AppIotaState>, storage: web::Data<StorageType>) -> impl Responder {
     let mut account_manager = app_iota_state.account_manager.write().unwrap();
-    let db = mongo_client.database(DB_NAME); // .expect("could not connect to database appdb");
-    let resp = match create_proof_service(req_body.into_inner(), &mut account_manager, db).await {
+    let resp = match create_proof_service(req_body.into_inner(), &mut account_manager, storage.as_ref()).await {
         Ok(proof_id) => {
             HttpResponse::Ok().body(proof_id)
         },
@@ -67,7 +66,7 @@ async fn create_proof(req_body: web::Json<ProofRequestDTO>, app_iota_state: web:
 pub fn scoped_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
          // prefixes all resources and routes attached to it...
-        web::scope("/trust-proof")
+        web::scope("/proofs")
             .service(get_proof)
             .service(get_proof_by_asset)
             .service(create_proof)

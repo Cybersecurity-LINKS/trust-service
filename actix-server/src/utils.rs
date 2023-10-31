@@ -210,27 +210,29 @@ pub async fn setup_account_manager(secret_manager: SecretManager) -> Result<Acco
     .finish()
     .await?;
 
-    // // TODO: create or retrieve a main account
-    // log::info!("Creating new account into the wallet...");
-    // // let server_account = account_manager.create_account()
-    // //     .with_alias("main-account".to_string())
-    // //     .finish()
-    // //     .await.unwrap();
-    // let server_account = account_manager.get_account("main-account".to_string()).await.unwrap();
-    // let _ = server_account.sync(None).await.unwrap();
+  // TODO: create or retrieve a main account, try recovery
+  // log::info!("Creating new account into the wallet...");
+  // let server_account = account_manager.create_account()
+  //     .with_alias("main-account".to_string())
+  //     .finish()
+  //     .await.unwrap();
+  log::info!("Get main account from the wallet...");
+  let server_account = account_manager.get_account("main-account".to_string()).await.unwrap();
+  let _ = server_account.sync(None).await.unwrap();
 
-    // log::info!("Generating an address for the account...");
-    // let addresses = server_account.generate_addresses(1, None).await.unwrap();
-    // let address =  addresses[0].address().as_ref().clone();
-    // log::info!("Address generate... {:?}", address);
+  log::info!("Generating an address for the account...");
+  let addresses = server_account.generate_addresses(1, None).await.unwrap();
+  let address =  addresses[0].address().as_ref().clone();
+  log::info!("Address generate... {:?}", address);
 
-    // log::info!("Requesting funds...");
-    // request_faucet_funds(
-    //     &client,
-    //     address.clone(),
-    //     client.get_bech32_hrp().await?.as_str(),
-    //     &env::var("FAUCET_URL").unwrap(),
-    // ).await.context("Failed to request faucet funds")?;
+  log::info!("Requesting funds...");
+  let client = Client::builder().with_primary_node(&env::var("NODE_URL").unwrap(), None).unwrap().finish().unwrap();
+  request_faucet_funds(
+      &client,
+      address.clone(),
+      client.get_bech32_hrp().await?.as_str(),
+      &env::var("FAUCET_URL").unwrap(),
+  ).await.context("Failed to request faucet funds").unwrap();
 
   Ok(account_manager)
 }

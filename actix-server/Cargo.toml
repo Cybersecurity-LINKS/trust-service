@@ -28,6 +28,10 @@ aes-gcm = "0.10.2"
 base64 = "0.21.0"
 ciborium = "0.2.1"
 env_logger = "0.10.0"
+async-trait = "0.1.68"
+clap = { version = "4.4.2", features = ["derive"] }
+reqwest = "0.11.20"
+lazy_static = "1.4.0"
 
 [lib]
 name = "trust_server"

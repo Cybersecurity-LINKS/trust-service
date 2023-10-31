@@ -12,6 +12,8 @@ pub mod services;
 pub mod models;
 pub mod utils;
 pub mod errors;
+pub mod storage;
+pub mod keycloak;
 
 const PROOF_TAG: &str = "proofs-2"; // TODO: define this somewhere else
 const DB_NAME: &str = "MODERATE"; // TODO: define this somewhere else
@@ -22,3 +24,4 @@ const MAIN_ACCOUNT: &str = "main-account";
 pub struct AppIotaState {
     pub account_manager: Arc<RwLock<AccountManager>>
 }
+

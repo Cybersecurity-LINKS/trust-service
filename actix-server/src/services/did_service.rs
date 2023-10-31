@@ -3,8 +3,7 @@
 // SPDX-License-Identifier: APACHE-2.0
 
 use std::env;
-use anyhow::{Result, Context}
-;
+use anyhow::{Result, Context};
 use identity_iota::did::DID;
 use identity_iota::iota::{IotaDocument};
 use identity_iota::prelude::{KeyPair, IotaIdentityClientExt, IotaDID};
@@ -13,13 +12,15 @@ use iota_client::block::address::Address;
 use iota_client::Client;
 use iota_wallet::account_manager::{AccountManager};
 
+use mongodb::Client as MongoClient;
 use mongodb::bson::Bson;
 use mongodb::{Database, bson::doc};
 
 use crate::models::user::User;
+use crate::storage::{StorageType, self};
 use crate::utils::create_did as create_did_identity;
 use crate::utils::request_faucet_funds;
-use crate::{USER_COLL_NAME, MAIN_ACCOUNT};
+use crate::{USER_COLL_NAME, MAIN_ACCOUNT, DB_NAME};
 
 
 use aes_gcm::{
@@ -29,7 +30,7 @@ use aes_gcm::{
 use base64::{Engine as _, engine::general_purpose};
 
 // TODO: handle failures and rollback
-pub async fn create_did(account_manager: &mut AccountManager, mongo_db: Database) -> Result<String>  {
+pub async fn create_did(account_manager: &mut AccountManager, storage: &StorageType) -> Result<String>  {
     let account = account_manager.get_account(MAIN_ACCOUNT).await?;
     let _ = account.sync(None).await?;
     let governor_address = account.addresses().await?[0].address().clone();
@@ -54,7 +55,7 @@ pub async fn create_did(account_manager: &mut AccountManager, mongo_db: Database
     log::info!("{:#}", iota_document);
     
     log::info!("Storing information in db..."); // TODO: this will become a keycloak request   
-    let collection = mongo_db.collection::<User>(USER_COLL_NAME); 
+   
     
     //TODO: understand if this should be in global state
     let aes_key_vec = general_purpose::STANDARD.decode(&env::var("ENC_KEY").expect("$ENC_KEY must be set."))?;
@@ -62,19 +63,21 @@ pub async fn create_did(account_manager: &mut AccountManager, mongo_db: Database
     let cipher = Aes256Gcm::new(aes_key);
     let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
 
-    // let user = doc! { "did": iota_document.id().as_str() , "private_key": hex::encode(key_pair_connector.private().as_ref()) };
-    // let user = User { did: iota_document.id().to_string(), private_key: hex::encode(key_pair_connector.private().as_ref()), proofs: vec![] };
     log::info!("sk: {:?}", key_pair_connector.private().as_ref());
     let user = User { did: iota_document.id().to_string(), nonce: nonce.to_vec(),  private_key: cipher.encrypt(&nonce, key_pair_connector.private().as_ref()).unwrap(), proofs: vec![] };
+    
+    storage.store_user_key(user).await?;
 
-    let result = collection.insert_one(user, None).await;
-    let _ = match result {
-        Ok(result) => result,
-        Err(error) => {
-            log::info!("{}", error);
-            return Err(error.into())
-        }
-    };
+    // let mongo_db = mongo_client.database(DB_NAME); // .expect("could not connect to database appdb");
+    // let collection = mongo_db.collection::<User>(USER_COLL_NAME); 
+    // let result = collection.insert_one(user, None).await;
+    // let _ = match result {
+    //     Ok(result) => result,
+    //     Err(error) => {
+    //         log::info!("{}", error);
+    //         return Err(error.into())
+    //     }
+    // };
 
     // Create a new account for that user
     log::info!("Creating new account into the wallet...");

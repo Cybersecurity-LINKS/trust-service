@@ -5,7 +5,7 @@
 use serde::{Serialize, Deserialize};
 use mongodb::bson::{Bson, Document};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Proof{
     pub proof_id: String,

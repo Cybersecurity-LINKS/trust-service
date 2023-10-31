@@ -12,13 +12,14 @@ use identity_iota::prelude::{KeyPair, KeyType, IotaDocument, IotaIdentityClientE
 use iota_client::Client;
 use iota_client::block::output::OutputId;
 use iota_wallet::account_manager::AccountManager;
-use mongodb::Database;
+use mongodb::{Database, Client as MongoClient};
 use mongodb::bson::doc;
 use mongodb::options::FindOneOptions;
 use purity::utils::get_metadata;
 use serde_json::Value;
 use crate::dtos::proof_dto::ProofRequestDTO;
 use crate::models::proof::Proof;
+use crate::storage::StorageType;
 use crate::{USER_COLL_NAME, PROOF_TAG};
 use crate::models::user::User;
 use proof::trustproof::TrustProof;
@@ -35,19 +36,14 @@ use base64::{Engine as _, engine::general_purpose};
 // use ciborium::from_reader;
 
 
-pub async fn create_proof(proof_dto: ProofRequestDTO, account_manager: &mut AccountManager, mongo_db: Database) -> Result<String>  {
+pub async fn create_proof(proof_dto: ProofRequestDTO, account_manager: &mut AccountManager, storage: &StorageType) -> Result<String>  {
     
     // let secret_manager = account_manager.get_secret_manager();
     // let client = Client::builder().with_primary_node(&env::var("NODE_URL").unwrap(), None).unwrap().finish().unwrap();
-
-    log::info!("Getting User information from db..."); // TODO: this will become a keycloak request   
-    let collection = mongo_db.collection::<User>(USER_COLL_NAME); 
+    
+    log::info!("Getting User information from storage..."); // TODO: this will become a keycloak request   
     let did = proof_dto.did.as_str();
-    let filter = doc! {"did": did};
-
-    let user = collection.find_one(Some(filter.clone()), None).await.unwrap().unwrap();
-
-
+    let user = storage.get_user_key(did).await;
     
     //TODO: understand if this should be in global state
     let aes_key_vec = general_purpose::STANDARD.decode(&env::var("ENC_KEY").expect("$ENC_KEY must be set."))?;
@@ -91,12 +87,7 @@ pub async fn create_proof(proof_dto: ProofRequestDTO, account_manager: &mut Acco
 
     log::info!("Storing proof-asset relationship...");
     let proof = Proof { proof_id: trust_proof_id.to_string(), asset_id: proof_dto.asset_hash.clone()};
-    let update = doc! {
-        "$push": {
-            "proofs": proof
-        }
-    };
-    let _result = collection.update_one(filter, update, None).await?;
+    storage.store_proof_info(did, proof).await?;
 
     log::info!("...End");
     Ok(trust_proof_id.to_string())
@@ -135,6 +126,7 @@ pub async fn get_proof(proof_id: String) -> Result<String> {
         .try_decode()
         .unwrap()
     );
+    // TODO: add hash in request and compare with the stored one inside the proof
 
     log::info!("Verifying proof...");
     match trust_proof.verify(&publisher_public_key) {
@@ -147,40 +139,9 @@ pub async fn get_proof(proof_id: String) -> Result<String> {
     }
 }
 
-pub async fn get_proof_by_asset(asset_id: String, mongo_db: Database) -> Result<String> {
+pub async fn get_proof_by_asset(asset_id: String, storage: &StorageType) -> Result<String> {
 
-    log::info!("Getting Asset information from db..."); // TODO: this will become a keycloak request   
-    let collection = mongo_db.collection::<User>(USER_COLL_NAME); 
-    let projected_collection = collection.clone_with_type::<Value>();
-    log::info!("Searching for asset: {:#?}", asset_id);
-
-    // Define the filter query
-    let filter = doc! {
-        "proofs": {
-          "$elemMatch": {
-            "assetId": asset_id.clone()
-          }
-        }
-    };
-
-    // Define the projection query
-    // Use FindOptions::builder() to set the projection
-    let find_options = FindOneOptions::builder().projection(doc! {
-        "proofs.$": 1,
-        "_id": 0
-    }).build();
-
-    let proof_id = match projected_collection.find_one(Some(filter), find_options).await {
-        Ok(Some(user)) => {
-            if let Some(proof_id) = user["proofs"][0]["proofId"].as_str() {
-                log::info!("proofId: {}", proof_id);
-                Ok(proof_id.to_owned())
-            } else {
-                Err(anyhow!("ProofId not found in the document."))
-            }      
-        },
-        Ok(None) => Err(anyhow!("No asset found with id: {}", asset_id)),
-        Err(err) => Err(anyhow!("Error: {}", err))
-    };
-    get_proof(proof_id?).await
+    log::info!("Getting Asset information from storage..."); // TODO: this will become a keycloak request   
+    let proof_id = storage.get_proof_id(asset_id).await?;
+    get_proof(proof_id).await
 }
