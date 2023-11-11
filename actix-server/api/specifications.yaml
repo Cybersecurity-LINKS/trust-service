@@ -18,10 +18,10 @@ tags:
 - name: Decentralized identifiers
   description: Everything about DID.
 paths:
-  /trust-proofs:
+  /proofs:
     post:
       tags:
-      - Trust proofs
+      - Proofs
       summary: Create and publish a trust proof on the Tangle.
       description: "Create and publish a trust proof on the Tangle. The received data\
         \ will be signed with the keypair related to that DID, the DID must be of\
@@ -65,7 +65,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TrustProofResponse'
       x-swagger-router-controller: TrustProofs
-  /trust-proofs/{trustProofId}:
+  /proofs/{proofId}:
     get:
       tags:
       - Trust proofs
@@ -74,7 +74,7 @@ paths:
         check the integrity on the system of the
       operationId: get_proof
       parameters:
-      - name: trustProofId
+      - name: proofId
         in: path
         description: Identifier of the trust proof.
         required: true

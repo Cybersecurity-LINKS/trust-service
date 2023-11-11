@@ -1,35 +1,10 @@
 // Copyright 2020-2023 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 use std::env;
-
-// use identity_iota::crypto::KeyPair;
-// use identity_iota::crypto::KeyType;
-// use identity_iota::iota::IotaClientExt;
-// use identity_iota::iota::IotaDocument;
-// use identity_iota::iota::IotaIdentityClientExt;
-// use identity_iota::iota::NetworkName;
-// use identity_iota::verification::MethodScope;
-// use identity_iota::verification::VerificationMethod;
-
-// use iota_client::block::address::Address;
-// use iota_client::block::output::AliasOutput;
-// use iota_client::block::output::Output;
-// use iota_client::crypto::keys::bip39;
-// use iota_client::node_api::indexer::query_parameters::QueryParameter;
-// use iota_client::secret::SecretManager;
-// use iota_client::Client;
-// use iota_sdk::types::block::address::Bech32Address;
-// use rand::distributions::DistString;
-
-// use iota_wallet::{
-//     iota_client::constants::SHIMMER_COIN_TYPE,
-//     secret::{stronghold::StrongholdSecretManager, },
-//     ClientOptions, Result, account_manager::AccountManager,
-// };
-
 use std::path::PathBuf;
 use anyhow::{Context};
 
+use crypto::keys::bip39::Mnemonic;
 use identity_iota::iota::block::output::AliasOutput;
 use identity_iota::iota::IotaClientExt;
 use identity_iota::iota::IotaDocument;
@@ -44,6 +19,8 @@ use identity_iota::verification::MethodScope;
 use identity_iota::verification::jws::JwsAlgorithm;
 use identity_stronghold::StrongholdStorage;
 use iota_sdk::Wallet;
+use iota_sdk::client::Password;
+use iota_sdk::client::secret::stronghold::StrongholdSecretManager;
 use iota_sdk::wallet::Result;
 use iota_sdk::client::api::GetAddressesOptions;
 use iota_sdk::client::node_api::indexer::query_parameters::QueryParameter;
@@ -60,7 +37,7 @@ use rand::distributions::DistString;
 pub static API_ENDPOINT: &str = "http://localhost:14265";
 pub static FAUCET_ENDPOINT: &str = "http://localhost:8091/api/enqueue";
 
-pub type MemStorage = Storage<JwkMemStore, KeyIdMemstore>;
+pub type MemStorage = Storage<StrongholdStorage, StrongholdStorage>;
 
 
 /// Creates a DID Document and publishes it in a new Alias Output.
@@ -204,20 +181,36 @@ pub async fn create_did_document(
 // SPDX-License-Identifier: APACHE-2.0
 
 
-// pub async fn recover_storage() -> Result<Storage<StrongholdStorage, StrongholdStorage>> {
+pub async fn create_or_recover_key_storage() -> Result<MemStorage> {
+  log::info!("Creating or recovering storage...");
 
-//   // Create a `StrongholdStorage`.
-//   // `StrongholdStorage` creates internally a `SecretManager` that can be
-//   // referenced to avoid creating multiple instances around the same stronghold snapshot.
-//   let stronghold_storage = StrongholdStorage::new(secret_manager);
-//   // Create storage for key-ids and JWKs.
-//   //
-//   // In this example, the same stronghold file that is used to store
-//   // key-ids as well as the JWKs.
-//   let storage: Storage<StrongholdStorage, StrongholdStorage> = Storage::new(stronghold_storage.clone(), stronghold_storage.clone());
+  // Setup Stronghold secret_manager
+  let stronghold = StrongholdSecretManager::builder()
+  .password(Password::from(std::env::var("KEY_STORAGE_STRONGHOLD_PASSWORD").unwrap()))
+  .build(&std::env::var("KEY_STORAGE_STRONGHOLD_SNAPSHOT_PATH").unwrap())?;
 
-//   Ok(storage)
-// }
+  // Only required the first time, can also be generated with `manager.generate_mnemonic()?`
+  let mnemonic = Mnemonic::from(std::env::var("KEY_STORAGE_MNEMONIC").unwrap());
+
+  match stronghold.store_mnemonic(mnemonic).await {
+    Ok(()) => log::info!("Stronghold mnemonic stored"),
+    Err(iota_sdk::client::stronghold::Error::MnemonicAlreadyStored) => log::info!("Stronghold mnemonic already stored"),
+    Err(error) => panic!("Error: {:?}", error)
+  }
+
+  // Create a `StrongholdStorage`.
+  // `StrongholdStorage` creates internally a `SecretManager` that can be
+  // referenced to avoid creating multiple instances around the same stronghold snapshot.
+  let stronghold_storage = StrongholdStorage::new(stronghold);
+
+  // Create storage for key-ids and JWKs.
+  //
+  // In this example, the same stronghold file that is used to store
+  // key-ids as well as the JWKs.
+  let storage = Storage::new(stronghold_storage.clone(), stronghold_storage.clone());
+
+  Ok(storage)
+}
 
 // pub async fn setup_secret_manager(password: &str, path: &str, mnemonic: &str) -> Result<SecretManager> {
 //   // Setup Stronghold secret_manager

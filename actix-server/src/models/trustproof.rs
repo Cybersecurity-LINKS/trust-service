@@ -6,9 +6,6 @@ use anyhow::Result;
 use crypto::hashes::Digest;
 use crypto::hashes::blake2b::Blake2b256;
 use base64::{Engine as _, engine::general_purpose};
-// use identity_iota::crypto::Ed25519;
-// use identity_iota::crypto::PublicKey;
-// use identity_iota::crypto::Sign;
 
 use identity_iota::credential::Jws;
 use identity_iota::document::verifiable::JwsVerificationOptions;
@@ -69,12 +66,14 @@ impl TrustProof {
 
     pub fn verify(&self, iota_document: &IotaDocument) -> anyhow::Result<()> {
         
-        let _decoded_jws = iota_document.verify_jws(
+        if iota_document.verify_jws(
             &Jws::from(self.jws.clone()),
             None,
             &EdDSAJwsVerifier::default(),
             &JwsVerificationOptions::default(),
-        )?; // TODO: catch the error on caller and log ("Signature NOT Valid")
+        ).is_err() {
+            return Err(anyhow::anyhow!("Verification Failed"))
+        } // TODO: define and catch the error on caller and log ("Signature NOT Valid")
 
         Ok(())  
     }

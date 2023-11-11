@@ -28,7 +28,10 @@ async fn get_proof(path: web::Path<String>) -> impl Responder {
         Ok(proof) => {
             HttpResponse::Ok().body(proof)
         },
-        Err(_) => HttpResponse::InternalServerError().finish()
+        Err(error) => {
+            log::info!("{}", error.to_string());
+            HttpResponse::InternalServerError().finish()
+        }
     };
     resp
 }
@@ -43,7 +46,10 @@ async fn get_proof_by_asset(info: web::Query<Info>, mongo_client: web::Data<Mong
         Ok(proof) => {
             HttpResponse::Ok().body(proof)
         },
-        Err(_) => HttpResponse::InternalServerError().finish()
+        Err(error) => {
+            log::info!("{}", error.to_string());
+            HttpResponse::InternalServerError().finish()
+        }
     };
     resp
 }
@@ -58,7 +64,10 @@ async fn create_proof(req_body: web::Json<ProofRequestDTO>, app_iota_state: web:
         Ok(proof_id) => {
             HttpResponse::Ok().body(proof_id)
         },
-        Err(_) => HttpResponse::InternalServerError().finish()
+        Err(error) => {
+            log::info!("{}", error.to_string());
+            HttpResponse::InternalServerError().finish()
+        }
     };
     resp
 }

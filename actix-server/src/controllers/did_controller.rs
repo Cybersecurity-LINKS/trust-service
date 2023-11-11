@@ -24,8 +24,8 @@ async fn create_did(app_iota_state: web::Data<AppIotaState>, mongo_client: web::
         Ok(did) => {
             HttpResponse::Ok().body(did)
         },
-        Err(_) => {
-            log::info!("create_did error");
+        Err(error) => {
+            log::info!("{}", error.to_string());
             HttpResponse::InternalServerError().finish()
         }
     };
@@ -38,7 +38,10 @@ async fn get_did_doc(path: web::Path<String>) -> impl Responder {
         Ok(did_doc) => {
             HttpResponse::Ok().body(did_doc)
         },
-        Err(_) => HttpResponse::InternalServerError().finish()
+        Err(error) => {
+            log::info!("{}", error.to_string());
+            HttpResponse::InternalServerError().finish()
+        }
     };
     resp
 }

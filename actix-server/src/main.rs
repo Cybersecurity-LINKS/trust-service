@@ -2,12 +2,11 @@
 //
 // SPDX-License-Identifier: APACHE-2.0
 
-use std::{env, sync::{Mutex, RwLock, Arc}, path::PathBuf, fmt::format};
+use std::{env, sync::{RwLock, Arc}};
 use actix_web::{web, App, HttpServer, middleware::Logger};
-use identity_iota::storage::{JwkMemStore, KeyIdMemstore};
 use iota_sdk::client::Client;
 use purity::utils::{create_or_recover_wallet, sync_print_balance, request_faucet_funds};
-use trust_server::{controllers::{did_controller, proof_controller}, AppIotaState, utils::MemStorage};
+use trust_server::{controllers::{did_controller, proof_controller}, AppIotaState, utils::create_or_recover_key_storage};
 use mongodb::Client as MongoClient;
 use trust_server::MAIN_ACCOUNT;
 
@@ -24,8 +23,7 @@ async fn main() -> anyhow::Result<()> {
     log::info!("Starting up on {}:{}", address, port);
 
     let wallet = create_or_recover_wallet().await?;
-    //TODO: handle persistence of storage
-    let storage = Arc::new(RwLock::new(MemStorage::new(JwkMemStore::new(), KeyIdMemstore::new()))); 
+    let key_storage = create_or_recover_key_storage().await?;
 
     // TODO: request funds at the start if balance is low - test with a new mnemonic
     let account = wallet.get_or_create_account(MAIN_ACCOUNT).await?;
@@ -44,13 +42,14 @@ async fn main() -> anyhow::Result<()> {
     //TODO: create an init function if the collections don't exist
     
     let wallet_arc = Arc::new(RwLock::new( wallet ));
-
+    let storage_arc = Arc::new(RwLock::new( key_storage )); 
+    
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(
                 AppIotaState {
                     wallet: wallet_arc.clone(),
-                    key_storage: storage.clone(),
+                    key_storage: storage_arc.clone(),
                 })
             )
             .app_data(web::Data::new(mongo_client.clone()))
