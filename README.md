@@ -36,8 +36,7 @@ Note: MongoDB Compass is a tool that can be used to interact with MongoDB databa
 
 For launching the application: 
 ```
-cd actix-server
-cargo run
+cargo run --bin actix-trust-service
 ```
 
 Beware of the configuration of the environment variables.

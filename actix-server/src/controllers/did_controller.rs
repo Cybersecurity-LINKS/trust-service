@@ -4,6 +4,7 @@
 
 use actix_web::get;
 use actix_web::{web, HttpResponse, Responder, post};
+use identity_iota::storage::key_storage;
 use mongodb::Client as MongoClient;
 
 use crate::AppIotaState;
@@ -14,14 +15,19 @@ use crate::DB_NAME;
 
 #[post("")] 
 async fn create_did(app_iota_state: web::Data<AppIotaState>, mongo_client: web::Data<MongoClient>) -> impl Responder {
-    let mut account_manager = app_iota_state.account_manager.write().unwrap();
+    log::info!("create_did");
+    let mut wallet = app_iota_state.wallet.write().unwrap();
+    let mut key_storage = app_iota_state.key_storage.write().unwrap();
     let db = mongo_client.database(DB_NAME); // .expect("could not connect to database appdb");
 
-    let resp = match create_did_service(&mut account_manager, db).await {
+    let resp = match create_did_service(&mut wallet, &mut key_storage, db).await {
         Ok(did) => {
             HttpResponse::Ok().body(did)
         },
-        Err(_) => HttpResponse::InternalServerError().finish()
+        Err(_) => {
+            log::info!("create_did error");
+            HttpResponse::InternalServerError().finish()
+        }
     };
     resp
 }
@@ -40,11 +46,9 @@ async fn get_did_doc(path: web::Path<String>) -> impl Responder {
 // this function could be located in a different module
 pub fn scoped_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
-         // prefixes all resources and routes attached to it...
-        web::scope("/did")
-            .service(create_did)
-            .service(get_did_doc)
-
-            
+        // prefixes all resources and routes attached to it...
+        web::scope("/dids")
+        .service(create_did)
+        .service(get_did_doc)            
     );
 }

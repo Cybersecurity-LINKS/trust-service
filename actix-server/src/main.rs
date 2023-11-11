@@ -4,11 +4,12 @@
 
 use std::{env, sync::{Mutex, RwLock, Arc}, path::PathBuf, fmt::format};
 use actix_web::{web, App, HttpServer, middleware::Logger};
-use iota_client::{secret::{SecretManager, stronghold::{StrongholdSecretManager, self}}, Client};
-use iota_wallet::account_manager::AccountManager;
-use trust_server::utils::{setup_secret_manager, setup_account_manager};
-use trust_server::{controllers::{did_controller, proof_controller}, AppIotaState};
+use identity_iota::storage::{JwkMemStore, KeyIdMemstore};
+use iota_sdk::client::Client;
+use purity::utils::{create_or_recover_wallet, sync_print_balance, request_faucet_funds};
+use trust_server::{controllers::{did_controller, proof_controller}, AppIotaState, utils::MemStorage};
 use mongodb::Client as MongoClient;
+use trust_server::MAIN_ACCOUNT;
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
@@ -22,23 +23,34 @@ async fn main() -> anyhow::Result<()> {
     let pass = env::var("MONGO_INITDB_ROOT_PASSWORD").expect("$MONGO_INITDB_ROOT_PASSWORD must be set.");
     log::info!("Starting up on {}:{}", address, port);
 
-    let secret_manager = setup_secret_manager(
-        &env::var("STRONGHOLD_PASSWORD").unwrap(),
-        &env::var("STRONGHOLD_PATH").unwrap(),
-        &env::var("NON_SECURE_MNEMONIC").unwrap()
-    ).await?;
-    // TODO: request funds at the start if balance is low 
+    let wallet = create_or_recover_wallet().await?;
+    //TODO: handle persistence of storage
+    let storage = Arc::new(RwLock::new(MemStorage::new(JwkMemStore::new(), KeyIdMemstore::new()))); 
 
-    let account_manager = Arc::new(RwLock::new(setup_account_manager(secret_manager).await?));
+    // TODO: request funds at the start if balance is low - test with a new mnemonic
+    let account = wallet.get_or_create_account(MAIN_ACCOUNT).await?;
+    // Sync account to make sure account is updated with outputs from previous examples
+    // Sync the account to get the outputs for the addresses
+    // Change to `true` to print the full balance report
+    sync_print_balance(&account, false).await?;
+    let governor_address = &account.generate_ed25519_addresses(1, None).await?[0];
+    println!("Generated address: {}", governor_address.address());
+    let client = Client::builder().with_node(&env::var("NODE_URL").unwrap())?.finish().await?;
+    request_faucet_funds(&client, governor_address.address(), &env::var("FAUCET_URL").unwrap()).await?;
+    let _ = account.sync(None).await?;
+
     let mongo_uri = env::var("MONGODB_URI").unwrap_or_else(|_| format!("mongodb://{}:{}@localhost:27017", usr, pass));
     let mongo_client = MongoClient::with_uri_str(mongo_uri).await.expect("failed to connect");
     //TODO: create an init function if the collections don't exist
     
+    let wallet_arc = Arc::new(RwLock::new( wallet ));
+
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(
                 AppIotaState {
-                    account_manager: account_manager.clone()       
+                    wallet: wallet_arc.clone(),
+                    key_storage: storage.clone(),
                 })
             )
             .app_data(web::Data::new(mongo_client.clone()))
