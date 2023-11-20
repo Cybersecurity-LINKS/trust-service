@@ -11,10 +11,10 @@ externalDocs:
   description: Find out more about MODERATE
   url: https://github.com/MODERATE-Project
 servers:
-- url: http://127.0.0.1:8080/api
+- url: http://127.0.0.1:8081/api
 tags:
-- name: Trust proofs
-  description: Everything about Trust proofs.
+- name: Proofs
+  description: Everything about proofs.
 - name: Decentralized identifiers
   description: Everything about DID.
 paths:
@@ -22,39 +22,37 @@ paths:
     post:
       tags:
       - Proofs
-      summary: Create and publish a trust proof on the Tangle.
-      description: "Create and publish a trust proof on the Tangle. The received data\
+      summary: Create and publish a proof on the Tangle.
+      description: "Create and publish a proof on the Tangle. The received data\
         \ will be signed with the keypair related to that DID, the DID must be of\
         \ the owner. If not provided, it should be possible to retrieve it. A reference\
-        \ to the trust proof output will be stored and identified with a trustProofId,\
-        \ there should be a 1-1 relationship, between the trust proof and the asset."
+        \ to the proof output will be stored and identified with a proofId,\
+        \ there should be a 1-1 relationship, between the proof and the asset."
       operationId: create_proof
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TrustProofRequest'
+              $ref: '#/components/schemas/ProofRequest'
         required: true
       responses:
         "200":
           description: Successful operation.
         "401":
           description: Access token is missing or invalid
-      x-swagger-router-controller: TrustProofs
+      x-swagger-router-controller: proof_service.rs
     get:
       tags:
-      - Trust proofs
-      summary: Verify and return a trust proof given an asset id (as a query params)
-      description: Returns the trust proof retrieved from the tangle. The method also
+      - Proofs
+      summary: Verify and return a proof given an asset id (as a query params)
+      description: Returns the proof retrieved from the tangle. The method also
         check the integrity on the system of the
       operationId: get_proof_by_asset
       parameters:
-        - in: path
+        - in: query
           name: assetId
           description: Identifier of the asset.
           required: true
-          style: simple
-          explode: false
           schema:
             type: string
       responses:
@@ -63,23 +61,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TrustProofResponse'
-      x-swagger-router-controller: TrustProofs
+                $ref: '#/components/schemas/ProofResponse'
+      x-swagger-router-controller: proof_service.rs
   /proofs/{proofId}:
     get:
       tags:
-      - Trust proofs
-      summary: Verify and return a trust proof
-      description: Returns the trust proof retrieved from the tangle. The method also
+      - Proofs
+      summary: Verify and return a proof
+      description: Returns the proof retrieved from the tangle. The method also
         check the integrity on the system of the
       operationId: get_proof
       parameters:
       - name: proofId
         in: path
-        description: Identifier of the trust proof.
+        description: Identifier of the proof.
         required: true
-        style: simple
-        explode: false
         schema:
           type: string
       responses:
@@ -88,8 +84,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TrustProofResponse'
-      x-swagger-router-controller: TrustProofs
+                $ref: '#/components/schemas/ProofResponse'
+      x-swagger-router-controller: proof_service.rs
   /dids:
     post:
       tags:
@@ -102,7 +98,7 @@ paths:
           description: Successful operation.
         "401":
           description: Access token is missing or invalid
-      x-swagger-router-controller: DecentralizedIdentifiers
+      x-swagger-router-controller: did_service.rs
   /dids/{did}:
     get:
       tags:
@@ -127,33 +123,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DIDdocument'
-      x-swagger-router-controller: DecentralizedIdentifiers
-  /sign-data:
-    post:
-      tags:
-      - Decentralized identifiers
-      summary: Generate a signature for the provided data.
-      description: Generate a signature for the provided data. The signature can be
-        verified with the public key stored inside the DID document.
-      operationId: sign_dataPOST
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: string
-              format: binary
-        required: true
-      responses:
-        "200":
-          description: Successful operation.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DIDdocument'
-      x-swagger-router-controller: DecentralizedIdentifiers
+      x-swagger-router-controller: did_service.rs
+  # /sign-data:
+  #   post:
+  #     tags:
+  #     - Decentralized identifiers
+  #     summary: Generate a signature for the provided data.
+  #     description: Generate a signature for the provided data. The signature can be
+  #       verified with the public key stored inside the DID document.
+  #     operationId: sign_dataPOST
+  #     requestBody:
+  #       content:
+  #         multipart/form-data:
+  #           schema:
+  #             type: string
+  #             format: binary
+  #       required: true
+  #     responses:
+  #       "200":
+  #         description: Successful operation.
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/DIDdocument'
+  #     x-swagger-router-controller: DecentralizedIdentifiers
 components:
   schemas:
-    TrustProofRequest:
+    ProofRequest:
       required:
       - assetHash
       - metadataHash
@@ -167,9 +163,9 @@ components:
         did:
           type: string
           description: DID of the
-      description: Input for building the Trust Proof
-    TrustProofResponse:
-      description: Trust proof in JWS format
+      description: Input for building the Proof
+    ProofResponse:
+      description: Proof in JWS format
     DIDdocument:
       description: A DID document
   responses:
