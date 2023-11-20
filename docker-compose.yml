@@ -1,29 +1,36 @@
 # TODO: correctly handle 
-# version: '3.9'
-# services:
-#   actix-trust-service:
-#     build:
-#       context: .
-#       dockerfile: Dockerfile
-#     image: actix-trust-service
-#     hostname: actix-trust-service
-#     container_name: actix-trust-service
-#     restart: unless-stopped
-#     ports:
-#       - "8080:8080"
-#     secrets:
-#       - 
-version: '3.7'
+version: '3.9'
 services:
+  actix-trust-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: actix-trust-service
+    hostname: actix-trust-service
+    container_name: actix-trust-service
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    # secrets:
+    #   - 
+    depends_on:
+      - mongodb_container
+    profiles:
+      - deploy
   mongodb_container:
     image: mongo:latest
     environment:
+      #TODO: move these from here
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    restart: unless-stopped
     ports:
       - 27017:27017
     volumes:
       - ./mongodb_data_container:/data/db
-
+    profiles:
+      - dev
+      - deploy
 volumes:
   mongodb_data_container:

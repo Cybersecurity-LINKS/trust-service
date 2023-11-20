@@ -1,32 +1,23 @@
-# FROM rustlang/rust:nightly-alpine AS build
-# # ENV PKG_CONFIG_ALLOW_CROSS=1
-# WORKDIR /usr/src/app
-# COPY . .
-# RUN cd actix-server && apk add --no-cach make musl-dev clang && RUSTFLAGS="-C target-feature=-crt-static" cargo install --path .
+# ---------------------------------------------------
+# 1 - Build Stage
+# ---------------------------------------------------
 
-# FROM rust:latest AS build
-# FROM ekidd/rust-musl-builder AS build
 FROM rustlang/rust:nightly-alpine AS build
-
-# RUN apt-get update
-# RUN apt-get install musl-tools clang libclang-dev -y && ln -s /bin/g++ /bin/musl-g++
-# RUN rustup target add x86_64-unknown-linux-musl && rustup component add rustfmt
-
 WORKDIR /usr/src/app
 COPY . .
-# RUN RUSTFLAGS=-Clinker=musl-gcc cargo install --path ./actix-server --target=x86_64-unknown-linux-musl
-RUN  apk add --no-cach make musl-dev clang llvm gcc libc-dev clang-dev binutils g++ linux-headers libstdc++ libgcc
-# ENV CXX=clang++
+COPY .env .env
+RUN  apk add --no-cache make musl-dev clang llvm gcc libc-dev clang-dev binutils g++ linux-headers libstdc++ libgcc
 ENV RUSTFLAGS="-C target-feature=-crt-static"
-RUN RUSTFLAGS="-C target-feature=-crt-static" && cargo install --path ./actix-server
+RUN cargo install --path ./actix-server
 
 
-# FINAL
+# ---------------------------------------------------
+# 2 - Deploy Stage
+# ---------------------------------------------------
 
 FROM alpine:latest
-ENV ADDR=127.0.0.1
-ENV PORT=8080
-ENV RUST_LOG=info
-EXPOSE 8080
+RUN  apk add --no-cache make musl-dev clang llvm gcc libc-dev clang-dev binutils g++ linux-headers libstdc++ libgcc
 COPY --from=build /usr/local/cargo/bin/actix-trust-service /usr/local/bin/actix-trust-service
-ENTRYPOINT [ "actix-trust-service" ]
+COPY --from=build /usr/src/app/.env /.env
+EXPOSE 8081
+ENTRYPOINT [ "actix-trust-service" ] 
