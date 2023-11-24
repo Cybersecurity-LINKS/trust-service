@@ -41,7 +41,7 @@ pub const PROOF_TAG: &str = "trust-service-proofs";
 
 pub struct IotaState {
   client: Client,
-  stronghold_storage: StrongholdStorage,
+  _stronghold_storage: StrongholdStorage,
   pub key_storage: MemStorage,
   wallet: Wallet,
   address: Bech32Address,
@@ -113,7 +113,7 @@ impl IotaState {
     request_faucet_funds(&client, service_address.address(), faucet.as_str()).await?;
     let _ = account.sync(None).await?;
 
-    Ok(IotaState{ client, stronghold_storage, key_storage, wallet, faucet, address: service_address.to_owned().into_bech32() })
+    Ok(IotaState{ client, _stronghold_storage: stronghold_storage, key_storage, wallet, faucet, address: service_address.to_owned().into_bech32() })
   }
 
   /// Creates a DID Document and publishes it in a new Alias Output.
@@ -134,8 +134,9 @@ impl IotaState {
     //TODO: here the governor address is always the same, i.e. the service
     let alias_output: AliasOutput = self.client.new_did_output(self.address.into_inner(), document, None).await?;
 
+    let secret_manager = self.wallet.get_secret_manager().write().await;
     let document: IotaDocument = self.client.publish_did_output(
-      self.stronghold_storage.as_secret_manager(),
+      &secret_manager,
       alias_output
     ).await?;
 
@@ -171,8 +172,13 @@ impl IotaState {
   ) -> Result<IotaDocument, TrustServiceError> {
     log::info!("Resolving did...");
     log::info!("{}/identity-resolver/{}", std::env::var("EXPLORER_URL").unwrap(), did);
-    let iota_document: IotaDocument = self.client.resolve_did(&IotaDID::try_from(did)?).await?;
-    Ok(iota_document)
+    match self.client.resolve_did(&IotaDID::try_from(did)?).await {
+        Ok(iota_document) => Ok(iota_document),
+        Err(err) => {
+          log::info!("Error {}", err);
+          Err(TrustServiceError::ResolveError(err))
+        },
+    }
   }
 
   pub async fn resolve_proof(
