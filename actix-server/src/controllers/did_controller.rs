@@ -3,47 +3,39 @@
 // SPDX-License-Identifier: APACHE-2.0
 
 use actix_web::get;
-use actix_web::{web, HttpResponse, Responder, post};
-use identity_iota::storage::key_storage;
-use mongodb::Client as MongoClient;
+use actix_web::{web, HttpResponse, post};
 
-use crate::AppIotaState;
-use crate::services::did_service::create_did as create_did_service;
-use crate::services::did_service::get_did_doc as get_did_doc_service;
-
-use crate::DB_NAME;
+use crate::services::iota_state::IotaState;
+use crate::services::mongodb_repo::MongoRepo;
+use crate::errors::TrustServiceError;
+use crate::models::user::User;
 
 #[post("")] 
-async fn create_did(app_iota_state: web::Data<AppIotaState>, mongo_client: web::Data<MongoClient>) -> impl Responder {
-    log::info!("create_did");
-    let mut wallet = app_iota_state.wallet.write().unwrap();
-    let mut key_storage = app_iota_state.key_storage.write().unwrap();
-    let db = mongo_client.database(DB_NAME); // .expect("could not connect to database appdb");
+async fn create_did(
+    iota_state: web::Data<IotaState>, 
+    mongodb_repo: web::Data<MongoRepo>
+) -> Result<HttpResponse, TrustServiceError> {
+    log::info!("controller: create_did");
 
-    let resp = match create_did_service(&mut wallet, &mut key_storage, db).await {
-        Ok(did) => {
-            HttpResponse::Ok().body(did)
-        },
-        Err(error) => {
-            log::info!("{}", error.to_string());
-            HttpResponse::InternalServerError().finish()
-        }
-    };
-    resp
+    let (iota_document, fragment) = iota_state.create_did().await?;
+    log::info!("{:#}", iota_document);
+    
+    let user = User { did: iota_document.id().to_string(), fragment: fragment, proofs: vec![] };
+    mongodb_repo.store_user(user).await?;
+    
+    Ok(HttpResponse::Ok().body(iota_document.id().to_string()))
 }
 
 #[get("/{did}")]
-async fn get_did_doc(path: web::Path<String>) -> impl Responder {
-    let resp = match get_did_doc_service(path.into_inner()).await {
-        Ok(did_doc) => {
-            HttpResponse::Ok().body(did_doc)
-        },
-        Err(error) => {
-            log::info!("{}", error.to_string());
-            HttpResponse::InternalServerError().finish()
-        }
-    };
-    resp
+async fn get_did_doc(
+    path: web::Path<String>,
+    iota_state: web::Data<IotaState>, 
+) -> Result<HttpResponse, TrustServiceError> {
+    log::info!("controller: get_did_doc");
+
+    let did = path.into_inner();    
+    let iota_document = iota_state.resolve_did(did.as_str()).await?; 
+    Ok(HttpResponse::Ok().body(iota_document.to_string()))
 }
 
 // this function could be located in a different module

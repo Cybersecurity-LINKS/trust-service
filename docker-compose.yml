@@ -20,13 +20,11 @@ services:
       - deploy
   mongodb_container:
     image: mongo:latest
-    environment:
-      #TODO: move these from here
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: rootpassword
     restart: unless-stopped
     ports:
       - 27017:27017
+    env_file: 
+      - .mongo.env
     volumes:
       - ./mongodb_data_container:/data/db
     profiles:

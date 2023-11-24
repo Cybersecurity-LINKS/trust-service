@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: APACHE-2.0
 
-use anyhow::Result;
 use crypto::hashes::Digest;
 use crypto::hashes::blake2b::Blake2b256;
 use base64::{Engine as _, engine::general_purpose};
@@ -16,7 +15,9 @@ use identity_eddsa_verifier::EdDSAJwsVerifier;
 use serde::Serialize;
 use serde::Deserialize;
 
-use crate::utils::MemStorage;
+use crate::services::iota_state::MemStorage;
+use crate::errors::TrustServiceError;
+
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -37,7 +38,7 @@ impl TrustProof {
         dataset_digest: &String,
         iota_document: &IotaDocument,
         did_publisher: String
-    ) -> Result<Self> {
+    ) -> Result<Self, TrustServiceError> {
 
         // TODO: (case 1 we receive the hash computed from another service) if the input are already a digest, is this necessary?
         let digest_metadata: [u8; 32] = Blake2b256::digest(metadata_digest.as_bytes()).as_slice().try_into().expect("Wrong length");
@@ -64,16 +65,16 @@ impl TrustProof {
 
     }
 
-    pub fn verify(&self, iota_document: &IotaDocument) -> anyhow::Result<()> {
-        
+    pub fn verify(&self, iota_document: &IotaDocument) -> Result<(), TrustServiceError> {
+        log::info!("Verifying proof...");
         if iota_document.verify_jws(
             &Jws::from(self.jws.clone()),
             None,
             &EdDSAJwsVerifier::default(),
             &JwsVerificationOptions::default(),
         ).is_err() {
-            return Err(anyhow::anyhow!("Verification Failed"))
-        } // TODO: define and catch the error on caller and log ("Signature NOT Valid")
+            return Err(TrustServiceError::ProofSignatureNotValid)
+        }
 
         Ok(())  
     }

@@ -10,8 +10,6 @@ use super::proof::Proof;
 #[serde(rename_all = "camelCase")]
 pub struct User{
     pub did: String,
-    // pub nonce: Vec<u8>,
-    // pub private_key:  Vec<u8>,
     pub fragment: String,
     pub proofs: Vec<Proof>
 }
