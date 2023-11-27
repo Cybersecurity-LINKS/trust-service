@@ -32,7 +32,7 @@ use purity::utils::request_faucet_funds;
 use purity::utils::sync_print_balance;
 
 use crate::errors::TrustServiceError;
-use crate::models::trustproof::TrustProof;
+use crate::models::tangle_proof::TangleProof;
 
 
 pub type MemStorage = Storage<StrongholdStorage, StrongholdStorage>;
@@ -184,7 +184,7 @@ impl IotaState {
   pub async fn resolve_proof(
     &self,
     proof_id: String
-  ) -> Result<TrustProof, TrustServiceError> {
+  ) -> Result<TangleProof, TrustServiceError> {
    
     let output_id = OutputId::from_str(proof_id.as_str())?;
 
@@ -193,7 +193,7 @@ impl IotaState {
     let metadata = output.features().expect("NO Features").metadata().expect("NO METADATA");
         
     // Extract metadata from output
-    let trust_proof: TrustProof = serde_json::from_slice(metadata.data())?;
+    let trust_proof: TangleProof = serde_json::from_slice(metadata.data())?;
     log::info!("\n{:#?}", trust_proof);
     log::info!("{}/output/{}", std::env::var("EXPLORER_URL").unwrap(), &output_id);
   
@@ -202,7 +202,7 @@ impl IotaState {
 
   pub async fn publish_proof(
     &self,
-    proof: TrustProof
+    proof: TangleProof
   ) -> Result<OutputId, TrustServiceError> {
    
     log::info!("Publishing trust proof msg...");

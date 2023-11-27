@@ -4,4 +4,4 @@
 
 pub mod user;
 pub mod proof;
-pub mod trustproof;
+pub mod tangle_proof;

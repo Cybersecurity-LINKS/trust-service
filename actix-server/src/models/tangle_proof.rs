@@ -21,7 +21,7 @@ use crate::errors::TrustServiceError;
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct TrustProof {
+pub struct TangleProof {
     metadata_digest: String,
     dataset_digest: String,
     jws: String,
@@ -29,7 +29,7 @@ pub struct TrustProof {
 }
 
 // TODO: implement two new, one that compute the hash, one that take as input a whole message
-impl TrustProof {
+impl TangleProof {
     
     pub async fn new(
         storage: &MemStorage,

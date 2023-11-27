@@ -45,8 +45,8 @@ paths:
       tags:
       - Proofs
       summary: Verify and return a proof given an asset id (as a query params)
-      description: Returns the proof retrieved from the tangle. The method also
-        check the integrity on the system of the
+      description: Returns the proof retrieved from the tangle. 
+      # The method also check the integrity on the system of the
       operationId: get_proof_by_asset
       parameters:
         - in: query
@@ -68,8 +68,8 @@ paths:
       tags:
       - Proofs
       summary: Verify and return a proof
-      description: Returns the proof retrieved from the tangle. The method also
-        check the integrity on the system of the
+      description: Returns the proof retrieved from the tangle. 
+      # The method also check the integrity on the system of the
       operationId: get_proof
       parameters:
       - name: proofId

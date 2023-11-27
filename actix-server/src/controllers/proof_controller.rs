@@ -10,7 +10,7 @@ use crate::services::iota_state::IotaState;
 use crate::services::mongodb_repo::MongoRepo;
 use crate::dtos::proof_dto::ProofRequestDTO;
 use crate::errors::TrustServiceError;
-use crate::models::trustproof::TrustProof;
+use crate::models::tangle_proof::TangleProof;
 
 
 #[derive(Deserialize)]
@@ -66,7 +66,7 @@ async fn create_proof(
     let user_doc = iota_state.resolve_did(did).await?;
 
     log::info!("Creating trust proof...");
-    let proof = TrustProof::new(
+    let proof = TangleProof::new(
         &iota_state.key_storage,
         &user.fragment, 
         &proof_dto.metadata_hash, 
