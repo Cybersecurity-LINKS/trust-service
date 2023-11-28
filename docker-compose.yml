@@ -10,7 +10,6 @@ services:
     container_name: actix-trust-service
     restart: unless-stopped
     ports:
-      - "8080:8080"
       - "8081:8081"
     # secrets:
     #   - 
@@ -21,6 +20,7 @@ services:
   mongodb_container:
     image: mongo:latest
     restart: unless-stopped
+    hostname: mongo
     ports:
       - 27017:27017
     env_file: 

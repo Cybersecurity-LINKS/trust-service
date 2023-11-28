@@ -9,7 +9,7 @@ use trust_server::{controllers::{did_controller, proof_controller}, services::{m
 async fn main() -> anyhow::Result<()> {
 
     dotenv::from_path(".env").expect(".env file not found");
-    dotenv::from_path(".mongo.env").expect("mongo.env file not found");
+    dotenv::from_path(".mongo.env").expect(".mongo.env file not found");
 
     env_logger::init();
 

@@ -63,7 +63,7 @@ impl IotaState {
     let mnemonic_string = std::env::var("KEY_STORAGE_MNEMONIC")
     .expect("$KEY_STORAGE_MNEMONIC must be set.");
 
-    let faucet = std::env::var("FAUCET_URL").expect("$NODE_URL must be set.");
+    let faucet = std::env::var("FAUCET_URL").expect("$FAUCET_URL must be set.");
     let node_url = std::env::var("NODE_URL").expect("$NODE_URL must be set.");
     
     // Setup Stronghold secret_manager

@@ -40,6 +40,7 @@ cargo run --bin actix-trust-service
 ```
 
 Beware of the configuration of the environment variables.
+Note: Modify `.env` and `.mongo.env` reasonably. (`ADDR` and `MONGO_ENDPOINT`)
 
 ### Running via docker
 
@@ -49,10 +50,14 @@ Commands for building the app’s container image and starting the app container
 docker compose --profile deploy up -d
 ```
 
+Beware of the configuration of the environment variables.
+Note: Modify `.env` and `.mongo.env` reasonably. (`ADDR` and `MONGO_ENDPOINT`)
+
 ## Usage
 
 <!-- Provide instructions and examples for use. Include screenshots as needed. -->
 - [API Reference](./actix-server/api/specifications.yaml)
+- [Postman Collaction](./actix-server/api/Trust-service.postman_collection.json)
 
 ## Test
 
