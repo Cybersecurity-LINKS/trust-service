@@ -20,7 +20,7 @@ This project is a microservice for creating and verifying proofs of data authent
 ### Requirements
 
 - `Rust` and `Cargo`. Follow the [documentation](https://doc.rust-lang.org/cargo/getting-started/installation.html) to install them. 
-- `Docker`
+- `Docker` and `Docker compose`
 
 
 ### Running locally
@@ -28,33 +28,36 @@ This project is a microservice for creating and verifying proofs of data authent
 
 For testing the application with MongoDB, follow these steps:
 
-- Run `docker compose up -d` to start the MongoDB container.
+- Run `docker compose up -d --profile dev` to start the MongoDB container.
 - Create a database called `MODERATE`.
 - Create a collection called `Users`.
 - Use [MongoDB Compass](https://www.mongodb.com/products/compass) to view the database content.
 Note: MongoDB Compass is a tool that can be used to interact with MongoDB databases and inspect their content.
 
 For launching the application: 
-```
-cd actix-server
-cargo run
+```shell
+cargo run --bin actix-trust-service
 ```
 
 Beware of the configuration of the environment variables.
+Note: Modify `.env` and `.mongo.env` reasonably. (`ADDR` and `MONGO_ENDPOINT`)
 
 ### Running via docker
 
 Commands for building the app’s container image and starting the app container:
 
 ```shell
-docker build -t ts .
-docker run -dp 8080:8080 ts  
+docker compose --profile deploy up -d
 ```
+
+Beware of the configuration of the environment variables.
+Note: Modify `.env` and `.mongo.env` reasonably. (`ADDR` and `MONGO_ENDPOINT`)
 
 ## Usage
 
 <!-- Provide instructions and examples for use. Include screenshots as needed. -->
 - [API Reference](./actix-server/api/specifications.yaml)
+- [Postman Collaction](./actix-server/api/Trust-service.postman_collection.json)
 
 ## Test
 

@@ -2,5 +2,5 @@
 //
 // SPDX-License-Identifier: APACHE-2.0
 
-pub mod proof_service;
-pub mod did_service;
+pub mod iota_state;
+pub mod mongodb_repo;

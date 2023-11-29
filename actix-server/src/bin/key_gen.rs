@@ -4,7 +4,7 @@
 
 use aes_gcm::{
     aead::{Aead, AeadCore, KeyInit, OsRng},
-    Aes256Gcm, Nonce, Key // Or `Aes128Gcm`
+    Aes256Gcm// Or `Aes128Gcm`
 };
 use base64::{Engine as _, engine::general_purpose};
 

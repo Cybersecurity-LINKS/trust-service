@@ -2,18 +2,16 @@
 //
 // SPDX-License-Identifier: APACHE-2.0
 
-use actix_web::{web, HttpResponse, Responder, get, post};
-use mongodb::Client as MongoClient;
+use actix_web::{web, HttpResponse, get, post};
+use identity_iota::iota::IotaDocument;
 use serde::Deserialize;
 
+use crate::services::iota_state::IotaState;
+use crate::services::mongodb_repo::MongoRepo;
 use crate::dtos::proof_dto::ProofRequestDTO;
-use crate::services::proof_service::create_proof as create_proof_service;
-use crate::services::proof_service::get_proof as get_proof_service;
-use crate::services::proof_service::get_proof_by_asset as get_proof_by_asset_service;
+use crate::errors::TrustServiceError;
+use crate::models::tangle_proof::TangleProof;
 
-
-use crate::AppIotaState;
-use crate::DB_NAME;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -22,44 +20,66 @@ struct Info {
 }
 
 #[get("/{proof_id}")]
-async fn get_proof(path: web::Path<String>) -> impl Responder {
+async fn get_proof(
+    path: web::Path<String>,
+    iota_state: web::Data<IotaState>,
+) -> Result<HttpResponse, TrustServiceError> {
+    // TODO: check if it is a proof in the db
+    let proof_id = path.into_inner();
+    let proof = iota_state.resolve_proof(proof_id).await?;
+    
+    let publisher_document: IotaDocument = iota_state.resolve_did(proof.did_publisher.as_str()).await?;
+    proof.verify(&publisher_document)?;
 
-    let resp = match get_proof_service(path.into_inner()).await {
-        Ok(proof) => {
-            HttpResponse::Ok().body(proof)
-        },
-        Err(_) => HttpResponse::InternalServerError().finish()
-    };
-    resp
+    Ok(HttpResponse::Ok().json(proof))
 }
 
 // this handler gets called if the query deserializes into `Info` successfully
 // otherwise a 400 Bad Request error response is returned
 //TODO: when sending a request the url should be encoded
 #[get("")]
-async fn get_proof_by_asset(info: web::Query<Info>, mongo_client: web::Data<MongoClient>) -> impl Responder {
-    let db: mongodb::Database = mongo_client.database(DB_NAME); // .expect("could not connect to database appdb");
-    let resp = match get_proof_by_asset_service(info.asset_id.clone(), db).await {
-        Ok(proof) => {
-            HttpResponse::Ok().body(proof)
-        },
-        Err(_) => HttpResponse::InternalServerError().finish()
-    };
-    resp
+async fn get_proof_by_asset(
+    info: web::Query<Info>, 
+    iota_state: web::Data<IotaState>, 
+    mongo_repo: web::Data<MongoRepo>
+) -> Result<HttpResponse, TrustServiceError> {
+    log::info!("controller: get_proof_by_asset");
+
+    let proof_id = mongo_repo.get_proof_id(info.asset_id.clone()).await?;
+    let proof = iota_state.resolve_proof(proof_id).await?;
+    
+    let publisher_document: IotaDocument = iota_state.resolve_did(proof.did_publisher.as_str()).await?;
+    proof.verify(&publisher_document)?;
+
+    Ok(HttpResponse::Ok().json(proof))
 }
 
-// TODO: add schema validation
 #[post("")] 
-async fn create_proof(req_body: web::Json<ProofRequestDTO>, app_iota_state: web::Data<AppIotaState>, mongo_client: web::Data<MongoClient>) -> impl Responder {
-    let mut account_manager = app_iota_state.account_manager.write().unwrap();
-    let db = mongo_client.database(DB_NAME); // .expect("could not connect to database appdb");
-    let resp = match create_proof_service(req_body.into_inner(), &mut account_manager, db).await {
-        Ok(proof_id) => {
-            HttpResponse::Ok().body(proof_id)
-        },
-        Err(_) => HttpResponse::InternalServerError().finish()
-    };
-    resp
+async fn create_proof(
+    proof_dto: web::Json<ProofRequestDTO>, 
+    iota_state: web::Data<IotaState>, 
+    mongo_repo: web::Data<MongoRepo>
+) -> Result<HttpResponse, TrustServiceError> {
+    let did = proof_dto.did.as_str();
+    let user = mongo_repo.get_user(did).await?;
+    // Resolve the published DID Document
+    let user_doc = iota_state.resolve_did(did).await?;
+
+    log::info!("Creating trust proof...");
+    let proof = TangleProof::new(
+        &iota_state.key_storage,
+        &user.fragment, 
+        &proof_dto.metadata_hash, 
+        &proof_dto.asset_hash, 
+        &user_doc, 
+        did.to_string()
+    ).await?;
+
+    log::info!("\n{:#?}", proof);
+    let proof_id = iota_state.publish_proof(proof).await?.to_string();
+
+    mongo_repo.store_proof_relationship(did, proof_id.clone(), proof_dto.asset_hash.clone()).await?;
+    Ok(HttpResponse::Ok().body(proof_id)) 
 }
 
 
@@ -67,7 +87,7 @@ async fn create_proof(req_body: web::Json<ProofRequestDTO>, app_iota_state: web:
 pub fn scoped_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
          // prefixes all resources and routes attached to it...
-        web::scope("/trust-proof")
+        web::scope("/proofs")
             .service(get_proof)
             .service(get_proof_by_asset)
             .service(create_proof)
