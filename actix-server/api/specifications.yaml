@@ -13,11 +13,51 @@ externalDocs:
 servers:
 - url: http://127.0.0.1:8081/api
 tags:
+- name: Decentralized identifiers
+  description: Everything about DIDs.
 - name: Proofs
   description: Everything about proofs.
-- name: Decentralized identifiers
-  description: Everything about DID.
+- name: NFTs
+  description: Everything about NFTs (ERC-721).
 paths:
+  /dids:
+      post:
+        tags:
+        - Decentralized identifiers
+        summary: Create a DID and a DID document.
+        description: Create a DID and a DID document.
+        operationId: create_did
+        responses:
+          "200":
+            description: Successful operation.
+          "401":
+            description: Access token is missing or invalid
+        x-swagger-router-controller: did_service.rs
+  /dids/{did}:
+    get:
+      tags:
+      - Decentralized identifiers
+      summary: Retrieve the DID document from the tangle associated to that DID.
+      description: Retrieve the DID document from the tangle associated to that DID.
+      operationId: get_did_doc
+      parameters:
+      - name: did
+        in: path
+        description: A DID.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: did:iota:rms:0x6268d0021e16d6c928da7595b6b5e98712a152de9ccf9a20ed9771705b20e9a8
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DIDdocument'
+      x-swagger-router-controller: did_service.rs
   /proofs:
     post:
       tags:
@@ -86,67 +126,42 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProofResponse'
       x-swagger-router-controller: proof_service.rs
-  /dids:
+  /nfts:
     post:
       tags:
-      - Decentralized identifiers
-      summary: Create a DID and a DID document.
-      description: Create a DID and a DID document.
-      operationId: create_did
+      - NFTs
+      summary: Mint an NFT
+      description: "Specifically, the service will mint the NFT by interacting with the AssetFactory smart contract. The NFT address is stored within the database, there should be a 1-1 relationship, between the NFT and the asset."
+      operationId: mint_nft
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NftRequest'
+        required: true
       responses:
-        "200":
-          description: Successful operation.
-        "401":
-          description: Access token is missing or invalid
-      x-swagger-router-controller: did_service.rs
-  /dids/{did}:
+        200:
+          description: Nft minted. Successful operation.
     get:
       tags:
-      - Decentralized identifiers
-      summary: Retrieve the DID document from the tangle associated to that DID.
-      description: Retrieve the DID document from the tangle associated to that DID.
-      operationId: get_did_doc
+      - NFTs
+      summary: Return the NFT information given an asset id (as a query params)
+      description: Returns the license and read from the NFT smart contract. 
+      operationId: read_nft
       parameters:
-      - name: did
-        in: path
-        description: A DID.
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-          example: did:iota:rms:0x6268d0021e16d6c928da7595b6b5e98712a152de9ccf9a20ed9771705b20e9a8
+        - in: query
+          name: assetId
+          description: Identifier of the asset.
+          required: true
+          schema:
+            type: string
       responses:
-        "200":
+        200:
           description: Successful operation.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DIDdocument'
-      x-swagger-router-controller: did_service.rs
-  # /sign-data:
-  #   post:
-  #     tags:
-  #     - Decentralized identifiers
-  #     summary: Generate a signature for the provided data.
-  #     description: Generate a signature for the provided data. The signature can be
-  #       verified with the public key stored inside the DID document.
-  #     operationId: sign_dataPOST
-  #     requestBody:
-  #       content:
-  #         multipart/form-data:
-  #           schema:
-  #             type: string
-  #             format: binary
-  #       required: true
-  #     responses:
-  #       "200":
-  #         description: Successful operation.
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: '#/components/schemas/DIDdocument'
-  #     x-swagger-router-controller: DecentralizedIdentifiers
+                $ref: '#/components/schemas/NftResponse'
 components:
   schemas:
     ProofRequest:
@@ -162,12 +177,47 @@ components:
           description: Hash of the metadata of the asset
         did:
           type: string
-          description: DID of the
+          description: DID of the user, owner of the asset
       description: Input for building the Proof
     ProofResponse:
       description: Proof in JWS format
     DIDdocument:
-      description: A DID document
+      description: A DID document as defined in the [DID standard](https://www.w3.org/TR/did-core/)
+    NftRequest:
+      required:
+      - assetId
+      - nftAlias
+      - license
+      - did
+      properties:
+        assetId:
+          type: string
+          description: Identifier of the asset (the hash of the asset has been used)
+        nftAlias:
+          type: string
+          description: Name for the NFT
+        license:
+          type: string
+          description: License in SPDX format chosen by the asset owner and stored within the NFT
+        did:
+          type: string
+          description: DID of the user, owner of the asset
+      description: Input for minting the NFT
+    NftResponse:
+      properties:
+        assetId:
+          type: string
+          description: Identifier of the asset (the hash of the asset has been used)
+        nftAddress:
+          type: string
+          description: Address of the NFT
+        license:
+          type: string
+          description: License in SPDX format chosen
+        did:
+          type: string
+          description: DID of the user, owner of the asset
+      description: Input for minting the NFT
   responses:
     UnathorizedError:
       description: Access token is missing or invalid

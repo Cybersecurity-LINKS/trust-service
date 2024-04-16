@@ -7,7 +7,7 @@ use std::sync::Arc;
 use actix_web::get;
 use actix_web::{web, HttpResponse, post};
 use ethers::abi::RawLog;
-use ethers::contract::{Contract, EthEvent};
+use ethers::contract::EthEvent;
 use ethers::middleware::SignerMiddleware;
 use ethers::providers::Provider;
 use ethers::signers::Wallet;
