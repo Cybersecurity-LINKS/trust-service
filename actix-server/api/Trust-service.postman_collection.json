@@ -7,6 +7,92 @@
 	},
 	"item": [
 		{
+			"name": "DID",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8081/api/dids",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"dids"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DID",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8081/api/dids/did:iota:rms:0x6c37a93b5b79d1e39fa66b5b3a6fbe2d3cbdf20481a00ff420712f768af0705b",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"dids",
+						"did:iota:rms:0x6c37a93b5b79d1e39fa66b5b3a6fbe2d3cbdf20481a00ff420712f768af0705b"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Trust proof",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"assetHash\": \"ccccccccccccccccccccccccccccccccccccccccccccccc\",\r\n  \"metadataHash\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\r\n  \"did\": \"did:iota:rms:0x65f8279b5f509043452e6731d03611dc2073e219e4aeda21923f13d40ded17a1\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8081/api/proofs",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"proofs"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Trust proof - id",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
@@ -74,92 +160,6 @@
 			"response": []
 		},
 		{
-			"name": "DID",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "GET",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": ""
-				},
-				"url": {
-					"raw": "http://127.0.0.1:8081/api/dids/did:iota:rms:0x6c37a93b5b79d1e39fa66b5b3a6fbe2d3cbdf20481a00ff420712f768af0705b",
-					"protocol": "http",
-					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
-					],
-					"port": "8081",
-					"path": [
-						"api",
-						"dids",
-						"did:iota:rms:0x6c37a93b5b79d1e39fa66b5b3a6fbe2d3cbdf20481a00ff420712f768af0705b"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Trust proof",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n  \"asset_hash\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\r\n  \"metadata_hash\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\r\n  \"did\": \"did:iota:rms:0xcaeb852bbfd200c1297056d5c455a01f33055c2c00b10f8664ad4a23026f913a\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://127.0.0.1:8081/api/proofs",
-					"protocol": "http",
-					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
-					],
-					"port": "8081",
-					"path": [
-						"api",
-						"proofs"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "DID",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"url": {
-					"raw": "http://127.0.0.1:8081/api/dids",
-					"protocol": "http",
-					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
-					],
-					"port": "8081",
-					"path": [
-						"api",
-						"dids"
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "Keycloak",
 			"request": {
 				"auth": {
@@ -195,6 +195,74 @@
 					"path": [
 						"admin",
 						"realms"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Nft",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{  \r\n  \"assetId\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\r\n  \"nftAlias\": \"DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD\",\r\n  \"license\": \"CC-BY-4.0\",\r\n  \"did\": \"did:iota:rms:0xcaeb852bbfd200c1297056d5c455a01f33055c2c00b10f8664ad4a23026f913a\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8081/api/nfts",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"nfts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Nft",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8081/api/nfts?assetId=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"nfts"
+					],
+					"query": [
+						{
+							"key": "assetId",
+							"value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+						}
 					]
 				}
 			},
