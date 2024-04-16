@@ -34,13 +34,22 @@ For testing the application with MongoDB, follow these steps:
 - Use [MongoDB Compass](https://www.mongodb.com/products/compass) to view the database content.
 Note: MongoDB Compass is a tool that can be used to interact with MongoDB databases and inspect their content.
 
-For launching the application: 
+Create smart contract rust bindings (mandatory the first time)
 ```shell
-cargo run --bin actix-trust-service
+# assuming the ipr-management folder is located in the same root folder of trust-service
+cd abigen
+cargo run -- --contract AssetFactory --abi-source "../../ipr-management/artifacts/contracts/AssetFactory.sol/AssetFactory.json"
+cargo run -- --contract Asset --abi-source "../../ipr-management/artifacts/contracts/Asset.sol/Asset.json"
+```
+
+Then, launch the application: 
+```shell
+cd actix-server
+cargo run --release --bin actix-trust-service
 ```
 
 Beware of the configuration of the environment variables.
-Note: Modify `.env` and `.mongo.env` reasonably. (`ADDR` and `MONGO_ENDPOINT`)
+Note: Modify `.env` and `.mongo.env` reasonably. (`ADDR`, `MONGO_ENDPOINT`, `ASSET_FACTORY_ADDR`,`L2_PRIVATE_KEY`)
 
 ### Running via docker
 
@@ -51,7 +60,7 @@ docker compose --profile deploy up -d
 ```
 
 Beware of the configuration of the environment variables.
-Note: Modify `.env` and `.mongo.env` reasonably. (`ADDR` and `MONGO_ENDPOINT`)
+Note: Modify `.env` and `.mongo.env` reasonably. (`ADDR`, `MONGO_ENDPOINT`, `ASSET_FACTORY_ADDR`,`L2_PRIVATE_KEY`)
 
 ## Usage
 
