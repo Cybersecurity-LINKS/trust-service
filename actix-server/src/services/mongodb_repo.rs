@@ -1,5 +1,6 @@
 use anyhow::Result;
 
+use mongodb::options::UpdateOptions;
 use mongodb::Collection;
 use mongodb::Client as MongoClient;
 use mongodb::bson::doc;
@@ -8,7 +9,7 @@ use mongodb::results::InsertOneResult;
 use serde_json::Value;
 
 use crate::errors::TrustServiceError;
-use crate::models::proof::Proof;
+use crate::models::asset::Asset;
 use crate::models::user::User;
 
 pub struct MongoRepo {
@@ -47,12 +48,13 @@ impl MongoRepo {
         let new_user = User { 
             did: user.did, 
             fragment: user.fragment, 
-            proofs: vec![] 
+            assets: vec![] 
         };
        
         match self.user_collection.insert_one(new_user, None).await {
             Ok(id) => Ok(id),
-            Err(_) => {
+            Err(err) => {
+                log::info!("{}", err.to_string());
                 return Err(TrustServiceError::InsertError)
             }
         }
@@ -73,7 +75,7 @@ impl MongoRepo {
     
     }
 
-    pub async fn get_proof_id(&self, asset_id: String) -> Result<String, TrustServiceError> {
+    pub async fn get_asset(&self, asset_id: String) -> Result<Asset, TrustServiceError> {
     
         log::info!("Getting Asset information from db...");
         let projected_collection = self.user_collection.clone_with_type::<Value>();
@@ -81,31 +83,64 @@ impl MongoRepo {
 
         // Define the filter query
         let filter = doc! {
-            "proofs": {
-            "$elemMatch": {
-                "assetId": asset_id.clone()
-            }
+            "assets": {
+                "$elemMatch": {
+                    "assetId": asset_id.clone()
+                }
             }
         };
 
         // Define the projection query, use FindOptions::builder() to set the projection
         let find_options = FindOneOptions::builder().projection(doc! {
-            "proofs.$": 1,
+            "assets.$": 1,
             "_id": 0
         }).build();
 
         match projected_collection.find_one(Some(filter), find_options).await {
             Ok(Some(user)) => {
-                if let Some(proof_id) = user["proofs"][0]["proofId"].as_str() {
-                    log::info!("proofId: {}", proof_id);
-                    Ok(proof_id.to_owned())
-                } else {
-                    Err(TrustServiceError::ProofIdNotFound)
-                }      
+                Ok(serde_json::from_value(user["assets"][0].clone())?)
+                   
             },
             Ok(None) => Err(TrustServiceError::AssetIdNotFound(asset_id)),
             Err(err) => Err(TrustServiceError::MongoDbError(err))
         }
+    }
+
+    pub async fn store_nft_addr(&self, asset_id: String, nft_addr: String) -> Result<Asset, TrustServiceError> {
+    
+        log::info!("Updating Asset {:#?} information...", asset_id);
+        let projected_collection = self.user_collection.clone_with_type::<Value>();
+
+        // Define the filter query
+        let filter = doc! {
+            "assets": {
+                "$elemMatch": {
+                    "assetId": asset_id.clone()
+                }
+            }
+        };
+
+        // Define update options
+        let options = UpdateOptions::builder().upsert(false).build();
+
+        // Define the update operation
+        let update = doc! { "$set": { 
+                "assets.$.nftAddr": nft_addr
+            }
+        };
+
+        let res =  projected_collection.update_one(filter, update, options).await.unwrap();
+        println!("Updated documents: {}", res.modified_count);
+        let ass = Asset{ asset_id, proof_id: "todo()!".to_string(), nft_addr:  None };
+        Ok(ass)
+        //  {
+        //     Ok(user) => {
+        //         Ok(serde_json::from_value(user["assets"][0].clone())?)
+                   
+        //     },
+        //     Ok(None) => Err(TrustServiceError::AssetIdNotFound(asset_id)),
+        //     Err(err) => Err(TrustServiceError::MongoDbError(err))
+        // }
     }
 
     pub async fn store_proof_relationship(
@@ -118,10 +153,10 @@ impl MongoRepo {
         log::info!("Storing proof-asset relationship...");
         let filter = doc! {"did": did};
 
-        let proof = Proof { proof_id, asset_id};
+        let asset = Asset { proof_id, asset_id, nft_addr: None };
         let update = doc! {
             "$push": {
-                "proofs": proof
+                "assets": asset
             }
         };
 

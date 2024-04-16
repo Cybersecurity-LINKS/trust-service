@@ -7,16 +7,18 @@ use mongodb::bson::{Bson, Document};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Proof{
+pub struct Asset{
+    pub asset_id: String,
     pub proof_id: String,
-    pub asset_id: String
+    pub nft_addr: Option<String>,
 }
 
-impl From<Proof> for Bson {
-    fn from(proof: Proof) -> Self {
+impl From<Asset> for Bson {
+    fn from(asset: Asset) -> Self {
         let mut document = Document::new();
-        document.insert("proofId", proof.proof_id);
-        document.insert("assetId", proof.asset_id);
+        document.insert("assetId", asset.asset_id);
+        document.insert("proofId", asset.proof_id);
+        document.insert("nftAddr", asset.nft_addr);
         Bson::Document(document)
     }
 }

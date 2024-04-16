@@ -17,3 +17,5 @@ example-walletdb
 walletdb
 *.stronghold
 mongodb_data_container
+/src/contracts/asset.rs
+/src/contracts/assetfactory.rs

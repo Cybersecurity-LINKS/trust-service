@@ -4,3 +4,13 @@
 
 pub mod proof_controller;
 pub mod did_controller;
+pub mod nft_controller;
+
+use serde::Deserialize;
+
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AssetQuery {
+    asset_id: String,
+}

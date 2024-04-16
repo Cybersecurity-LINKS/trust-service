@@ -20,7 +20,7 @@ async fn create_did(
     let (iota_document, fragment) = iota_state.create_did().await?;
     log::info!("{:#}", iota_document);
     
-    let user = User { did: iota_document.id().to_string(), fragment: fragment, proofs: vec![] };
+    let user = User { did: iota_document.id().to_string(), fragment: fragment, assets: vec![] };
     mongodb_repo.store_user(user).await?;
     
     Ok(HttpResponse::Ok().body(iota_document.id().to_string()))
