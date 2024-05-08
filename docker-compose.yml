@@ -17,6 +17,7 @@ services:
       - mongodb_container
     profiles:
       - deploy
+      
   mongodb_container:
     image: mongo:latest
     restart: unless-stopped
@@ -24,7 +25,7 @@ services:
     ports:
       - 27017:27017
     env_file: 
-      - .mongo.env
+      - ./actix-server/.mongo.env
     volumes:
       - ./mongodb_data_container:/data/db
     profiles:
