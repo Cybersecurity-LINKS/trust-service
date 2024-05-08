@@ -38,6 +38,7 @@ async fn mint_nft(
         symbol: "todo!()".to_string(), // TODO: update the request or compute it
         proof_id: asset.proof_id.clone(), 
         did: req.did.clone(), 
+        asset_id: req.asset_id.clone(),
         license: req.license.clone()
     };
     let call = asset_factory_sc.tokenize(asset_data);

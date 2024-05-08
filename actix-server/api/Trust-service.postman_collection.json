@@ -67,7 +67,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"assetHash\": \"ccccccccccccccccccccccccccccccccccccccccccccccc\",\r\n  \"metadataHash\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\r\n  \"did\": \"did:iota:rms:0x65f8279b5f509043452e6731d03611dc2073e219e4aeda21923f13d40ded17a1\"\r\n}",
+					"raw": "{ \r\n  \"assetId\": \"id-asset-1\",\r\n  \"assetHash\": \"ffffffffffffffffffffffffffffffffffffffffffff\",\r\n  \"metadataHash\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\r\n  \"did\": \"did:iota:rms:0x65fb57d4406a854ddb4f091f89fdafe5086d257a8972f5406f6ead0408703f62\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -136,7 +136,7 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "http://127.0.0.1:8081/api/proofs?assetId=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+					"raw": "http://127.0.0.1:8081/api/proofs?assetId=id-asset-1",
 					"protocol": "http",
 					"host": [
 						"127",
@@ -152,49 +152,8 @@
 					"query": [
 						{
 							"key": "assetId",
-							"value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+							"value": "id-asset-1"
 						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Keycloak",
-			"request": {
-				"auth": {
-					"type": "bearer",
-					"bearer": [
-						{
-							"key": "token",
-							"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJyaEM2dEdjV1d5N1B0VXJPMlAzVW1TaHd2bmg3M2RBNjZNR1o2cHUzMGRjIn0.eyJleHAiOjE2OTAyMDQxMzgsImlhdCI6MTY5MDIwNDA3OCwianRpIjoiNmNhNGU2OTAtNWNhMC00NDZhLWJkOWQtNzE5NGMyZDZiNmI2IiwiaXNzIjoiaHR0cHM6Ly9tb2RlcmF0ZWtjLnRlc3QuY3RpYy5lcy9yZWFsbXMvbWFzdGVyIiwic3ViIjoiODJhYzM5ZjItMjI3Ni00YjI4LWFlNjUtZjA1YjAwZmFlZTQ3IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiYWRtaW4tY2xpIiwic2Vzc2lvbl9zdGF0ZSI6ImQ4NDA2N2M3LWI0ZGEtNDhkZi04OTc0LTk5M2Y4YjI0OTljNCIsImFjciI6IjEiLCJzY29wZSI6ImVtYWlsIHByb2ZpbGUiLCJzaWQiOiJkODQwNjdjNy1iNGRhLTQ4ZGYtODk3NC05OTNmOGIyNDk5YzQiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInByZWZlcnJlZF91c2VybmFtZSI6ImFkbWluIn0.NuMySLvdEddIdoPIiOsDr03ztyK-GrdVsbMPKw9oCHIYb1fqgiaiMpMlqYn1L2VPCG-Z2uxRHINYfPeSyzsKTyS1DTtdjW_FLYX5fGtrsczzamdFcNzKSh6hx8bfmOz0Zl9ZwzZvezq6Jtxgw6sFwcoFNTjYGgw_heciKKCFC7BIakb6MBUoBjQRg-bAB6zJzy1kxEgsl6hnVFxGnkLHUW4YnYsj9lQnUZSm3LJILyW5OeFOs6fNQScchiTsinHHXlmFAhIUga9f16WEGfomjkO_MqymhmOEriopwmYVEL7Mw7XZIRXG7SaJ_WDcTuKlPkS3CqUAb0YGLy8iQ91XLQ",
-							"type": "string"
-						}
-					]
-				},
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"realm\": \"reald-202d0f\", \"enabled\": true}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "https://moderatekc.test.ctic.es/admin/realms",
-					"protocol": "https",
-					"host": [
-						"moderatekc",
-						"test",
-						"ctic",
-						"es"
-					],
-					"path": [
-						"admin",
-						"realms"
 					]
 				}
 			},
@@ -207,7 +166,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{  \r\n  \"assetId\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\r\n  \"nftAlias\": \"DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD\",\r\n  \"license\": \"CC-BY-4.0\",\r\n  \"did\": \"did:iota:rms:0xcaeb852bbfd200c1297056d5c455a01f33055c2c00b10f8664ad4a23026f913a\"\r\n}",
+					"raw": "{\r\n \"assetId\": \"id-asset-1\",\r\n \"nftAlias\": \"ntf-asset-1\",\r\n \"license\": \"CC-BY-4.0\",\r\n \"did\": \"did:iota:rms:0xcaeb852bbfd200c1297056d5c455a01f33055c2c00b10f8664ad4a23026f913a\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -245,7 +204,7 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "http://127.0.0.1:8081/api/nfts?assetId=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+					"raw": "http://127.0.0.1:8081/api/nfts?assetId=id-asset-1",
 					"protocol": "http",
 					"host": [
 						"127",
@@ -261,7 +220,7 @@
 					"query": [
 						{
 							"key": "assetId",
-							"value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+							"value": "id-asset-1"
 						}
 					]
 				}

@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProofRequest {
+    pub asset_id: String,
     pub asset_hash: String,
     pub metadata_hash: String,
     pub did: String

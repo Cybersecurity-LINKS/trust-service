@@ -166,9 +166,14 @@ components:
   schemas:
     ProofRequest:
       required:
+      - assetId
       - assetHash
       - metadataHash
+      - did
       properties:
+        assetId: 
+          type: string
+          description: Identifier of the asset
         assetHash:
           type: string
           description: Hash of the asset for which the service will create a proof.
@@ -192,7 +197,7 @@ components:
       properties:
         assetId:
           type: string
-          description: Identifier of the asset (the hash of the asset has been used)
+          description: Identifier of the asset
         nftAlias:
           type: string
           description: Name for the NFT
@@ -207,7 +212,7 @@ components:
       properties:
         assetId:
           type: string
-          description: Identifier of the asset (the hash of the asset has been used)
+          description: Identifier of the asset
         nftAddress:
           type: string
           description: Address of the NFT

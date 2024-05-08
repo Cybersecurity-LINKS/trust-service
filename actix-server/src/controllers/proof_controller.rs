@@ -72,7 +72,7 @@ async fn create_proof(
     log::info!("\n{:#?}", proof);
     let proof_id = iota_state.publish_proof(proof).await?.to_string();
 
-    mongo_repo.store_proof_relationship(did, proof_id.clone(), proof_dto.asset_hash.clone()).await?;
+    mongo_repo.store_proof_relationship(did, proof_id.clone(), proof_dto.asset_id.clone()).await?;
     Ok(HttpResponse::Ok().body(proof_id)) 
 }
 
