@@ -46,6 +46,11 @@ impl TangleProof {
 
         let digests_sum = [digest_metadata, digest_dataset].concat();
 
+        // let payload = json!({
+        //     "metadataHash": metadata_digest,
+        //     "datasetHash": dataset_digest,
+        // });
+
         // Compute signature
         let jws = iota_document.create_jws(&storage, &fragment, &digests_sum, &JwsSignatureOptions::default()).await?;
         // Verify signature

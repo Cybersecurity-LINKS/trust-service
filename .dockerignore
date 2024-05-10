@@ -1,4 +1,10 @@
 actix-server/mongodb_data_container
-walletdb
-wallet.stronghold
-target
+actix-server/example-walletdb
+actix-server/example.stronghold
+actix-server/key_storage.stronghold
+
+actix-server/src/bin/contracts/asset.rs
+actix-server/src/bin/contracts/assetfactory.rs
+
+actix-server/target
+abigen/target

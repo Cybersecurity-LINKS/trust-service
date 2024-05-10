@@ -34,6 +34,14 @@ pub enum TrustServiceError {
     JwkError(#[from]identity_iota::storage::JwkStorageDocumentError),
     #[error("Mongo db Error")]
     MongoDbError(#[from]mongodb::error::Error),
+    #[error("Smart Contract address recovery Error")]
+    ContractAddressRecoveryError,
+    #[error("Contract error: {0}")]
+    ContractError(String),
+    #[error("Attempting to interact with a non-existent smart contract")]
+    MissingNftAddress,
+    #[error("Error converting to Address")]
+    AddressError,
     
     #[error("Error converting OutputId")]
     IotaBlockError(#[from]identity_iota::iota::block::Error),
@@ -41,6 +49,8 @@ pub enum TrustServiceError {
     ProofSignatureNotValid,
     #[error("Error serde_json")]
     SerdeJsonError(#[from]serde_json::Error),
+    #[error("Error: {0}")]
+    CustomError(String),
     #[error("Generic error")]
     GenericError(#[from] anyhow::Error)
 }   
@@ -72,7 +82,11 @@ impl ResponseError for TrustServiceError {
             TrustServiceError::WalletError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             TrustServiceError::WriteProofError => StatusCode::INTERNAL_SERVER_ERROR,
             TrustServiceError::GenericError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-
+            TrustServiceError::ContractAddressRecoveryError => StatusCode::INTERNAL_SERVER_ERROR,
+            TrustServiceError::ContractError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            TrustServiceError::MissingNftAddress => StatusCode::BAD_REQUEST,
+            TrustServiceError::AddressError => StatusCode::INTERNAL_SERVER_ERROR,
+            TrustServiceError::CustomError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }

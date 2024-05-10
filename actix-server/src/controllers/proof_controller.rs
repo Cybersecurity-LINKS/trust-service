@@ -4,20 +4,14 @@
 
 use actix_web::{web, HttpResponse, get, post};
 use identity_iota::iota::IotaDocument;
-use serde::Deserialize;
 
+use crate::controllers::AssetQuery;
 use crate::services::iota_state::IotaState;
 use crate::services::mongodb_repo::MongoRepo;
-use crate::dtos::proof_dto::ProofRequestDTO;
+use crate::dtos::ProofRequest;
 use crate::errors::TrustServiceError;
 use crate::models::tangle_proof::TangleProof;
 
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct Info {
-    asset_id: String,
-}
 
 #[get("/{proof_id}")]
 async fn get_proof(
@@ -39,14 +33,14 @@ async fn get_proof(
 //TODO: when sending a request the url should be encoded
 #[get("")]
 async fn get_proof_by_asset(
-    info: web::Query<Info>, 
+    query: web::Query<AssetQuery>, 
     iota_state: web::Data<IotaState>, 
     mongo_repo: web::Data<MongoRepo>
 ) -> Result<HttpResponse, TrustServiceError> {
     log::info!("controller: get_proof_by_asset");
 
-    let proof_id = mongo_repo.get_proof_id(info.asset_id.clone()).await?;
-    let proof = iota_state.resolve_proof(proof_id).await?;
+    let asset = mongo_repo.get_asset(query.asset_id.clone()).await?;
+    let proof = iota_state.resolve_proof(asset.proof_id).await?;
     
     let publisher_document: IotaDocument = iota_state.resolve_did(proof.did_publisher.as_str()).await?;
     proof.verify(&publisher_document)?;
@@ -56,7 +50,7 @@ async fn get_proof_by_asset(
 
 #[post("")] 
 async fn create_proof(
-    proof_dto: web::Json<ProofRequestDTO>, 
+    proof_dto: web::Json<ProofRequest>, 
     iota_state: web::Data<IotaState>, 
     mongo_repo: web::Data<MongoRepo>
 ) -> Result<HttpResponse, TrustServiceError> {
@@ -78,7 +72,7 @@ async fn create_proof(
     log::info!("\n{:#?}", proof);
     let proof_id = iota_state.publish_proof(proof).await?.to_string();
 
-    mongo_repo.store_proof_relationship(did, proof_id.clone(), proof_dto.asset_hash.clone()).await?;
+    mongo_repo.store_proof_relationship(did, proof_id.clone(), proof_dto.asset_id.clone()).await?;
     Ok(HttpResponse::Ok().body(proof_id)) 
 }
 

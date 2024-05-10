@@ -4,12 +4,12 @@
 
 use serde::{Serialize, Deserialize};
 
-use super::proof::Proof;
+use super::asset::Asset;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct User{
     pub did: String,
     pub fragment: String,
-    pub proofs: Vec<Proof>
+    pub assets: Vec<Asset>
 }

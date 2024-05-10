@@ -1,7 +1,9 @@
 // SPDX-FileCopyrightText: 2023 Fondazione LINKS
 // SPDX-License-Identifier: APACHE-2.0
 
+use std::path::PathBuf;
 use std::str::FromStr;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::Result;
 
@@ -20,19 +22,26 @@ use identity_iota::verification::MethodScope;
 
 use identity_iota::verification::jws::JwsAlgorithm;
 use identity_stronghold::StrongholdStorage;
+use iota_sdk::client::constants::SHIMMER_COIN_TYPE;
+use iota_sdk::client::secret::SecretManager;
+use iota_sdk::client::stronghold::StrongholdAdapter;
+use iota_sdk::types::block::output::feature::{MetadataFeature, TagFeature};
+use iota_sdk::types::block::output::unlock_condition::{AddressUnlockCondition, TimelockUnlockCondition};
+use iota_sdk::wallet::{Account, ClientOptions};
 use iota_sdk::Wallet;
 use iota_sdk::client::Password;
 use iota_sdk::client::secret::stronghold::StrongholdSecretManager;
 use iota_sdk::client::Client;
 use iota_sdk::types::block::address::Bech32Address;
-use iota_sdk::types::block::output::OutputId;
-use purity::account::PurityAccountExt;
-use purity::utils::create_or_recover_wallet;
-use purity::utils::request_faucet_funds;
-use purity::utils::sync_print_balance;
+use iota_sdk::types::block::output::{BasicOutputBuilder, Feature, OutputId, UnlockCondition};
+// use purity::account::PurityAccountExt;
+// use purity::utils::create_or_recover_wallet;
+// use purity::utils::request_faucet_funds;
+// use purity::utils::sync_print_balance;
 
 use crate::errors::TrustServiceError;
 use crate::models::tangle_proof::TangleProof;
+use crate::utils::{request_faucet_funds, sync_print_balance};
 
 
 pub type MemStorage = Storage<StrongholdStorage, StrongholdStorage>;
@@ -67,7 +76,7 @@ impl IotaState {
     let node_url = std::env::var("NODE_URL").expect("$NODE_URL must be set.");
     
     // Setup Stronghold secret_manager
-    let stronghold = StrongholdSecretManager::builder()
+    let stronghold  = StrongholdSecretManager::builder()
     .password(Password::from(stronghold_pass))
     .build(stronghold_path)?;
 
@@ -99,7 +108,7 @@ impl IotaState {
 
     
 
-    let wallet = create_or_recover_wallet().await?;
+    let wallet = Self::create_or_recover_wallet().await?;
     // TODO: test with a new mnemonic
     let account = wallet.get_or_create_account(MAIN_ACCOUNT).await?;
     // Sync account to make sure account is updated with outputs from previous transactions
@@ -213,16 +222,130 @@ impl IotaState {
     
 
     // TODO: just publish the jws
-    match account.write_data( 
-        &self.address, 
-        PROOF_TAG, 
-        proof.to_json()?.as_str().as_bytes().to_vec(), 
-        None
+    match Self::write_data( 
+      &account,
+      &self.address, 
+      PROOF_TAG, 
+      proof.to_json()?.as_str().as_bytes().to_vec(), 
+      None
     ).await {
         Ok(proof_id) => Ok(proof_id),
         Err(_) => Err(TrustServiceError::WriteProofError),
     }
 
+  }
+
+  async fn write_data(
+    account: &Account,
+    address: &Bech32Address,
+    tag: &str, 
+    metadata: Vec<u8>,
+    _expiration: Option<u32>
+  ) -> anyhow::Result<OutputId> {
+    log::info!("Start write_data");
+    let timelock = (SystemTime::now() + Duration::from_secs(60*60))
+        .duration_since(UNIX_EPOCH)
+        .expect("clock went backwards")
+        .as_secs()
+        .try_into()
+        .unwrap();
+    // Send native tokens together with the required storage deposit
+    let rent_structure = account.client().get_rent_structure().await?;
+
+    let output = BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure)
+        .add_feature(Feature::Tag(TagFeature::new(tag.as_bytes().to_vec())?))
+        .add_feature(Feature::Metadata(MetadataFeature::new(metadata)?))
+        // .add_feature(Feature::Sender(SenderFeature::new(address)))
+        .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)))
+        .add_unlock_condition(UnlockCondition::Timelock(TimelockUnlockCondition::new(timelock)?))
+        .finish_output(account.client().get_token_supply().await?)?;
+
+    let outputs = vec![
+        output
+    ];
+
+    //let transaction = account.send(outputs, options).await?;
+    let return_value = match account.send_outputs(outputs, None).await {
+        anyhow::Result::Ok(t) => {
+            // Save the transaction in a variable
+                       
+            let _ = account
+                .retry_transaction_until_included(&t.transaction_id, None, None)
+                .await;
+            println!("Block on Explorer: {}/block/{}", std::env::var("EXPLORER_URL").unwrap(), t.block_id.expect("no block created yet"));
+            Ok(OutputId::new(t.transaction_id, 0 as u16)?)  // TODO: fragmentation will require something else
+        } 
+        Err(err) => {
+            // Print the error message and throw an exception
+            log::warn!("Error sending transaction: {}", err);
+            anyhow::bail!(err)
+            //panic!("Transaction send failed");
+        }
+    };
+       
+    let _ = account.sync(None).await?;
+    return_value
+  }
+  
+  pub async fn setup_secret_manager() -> Result<StrongholdAdapter> {
+
+    let exists = PathBuf::from(&std::env::var("STRONGHOLD_SNAPSHOT_PATH").unwrap()).exists();
+
+    // Setup Stronghold secret_manager
+    let secret_manager = StrongholdSecretManager::builder()
+        .password(std::env::var("STRONGHOLD_PASSWORD").unwrap())
+        .build(std::env::var("STRONGHOLD_SNAPSHOT_PATH").unwrap())?;
+
+    if !exists {
+        log::info!("Storing mnemonic...");
+        // Only required the first time, can also be generated with `manager.generate_mnemonic()?`
+        let mnemonic = Mnemonic::from(std::env::var("MNEMONIC").unwrap());
+
+        // The mnemonic only needs to be stored the first time
+        secret_manager.store_mnemonic(mnemonic).await?;
+    }
+
+    Ok(secret_manager)
+  }
+
+  pub async fn setup_wallet(secret_manager: StrongholdAdapter) -> Result<Wallet> {
+
+    // Create the wallet with the secret_manager and client options
+    let client_options = ClientOptions::new().with_node(&std::env::var("NODE_URL").unwrap())?;
+
+    // Create the wallet
+    let wallet = Wallet::builder()
+        .with_secret_manager(SecretManager::Stronghold(secret_manager))
+        .with_storage_path(&std::env::var("WALLET_DB_PATH").unwrap())
+        .with_client_options(client_options)
+        .with_coin_type(SHIMMER_COIN_TYPE)
+        .finish()
+        .await?;
+
+    Ok(wallet)
+  }
+
+  pub async fn create_or_recover_wallet() -> Result<Wallet> {
+
+    let wallet = if PathBuf::from(&std::env::var("WALLET_DB_PATH").unwrap()).exists() {
+        log::info!("Recovering wallet...");
+        let wallet = Wallet::builder()
+        .with_storage_path(&std::env::var("WALLET_DB_PATH").unwrap())
+        .finish()
+        .await?;
+
+        wallet
+        .set_stronghold_password(std::env::var("STRONGHOLD_PASSWORD").unwrap())
+        .await?;
+        
+        Ok(wallet)
+    } else {
+        log::info!("Creating wallet...");
+        let secret_manager = Self::setup_secret_manager().await?;
+        Self::setup_wallet(secret_manager).await
+    };
+
+    wallet
   }
 
 }

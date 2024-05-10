@@ -7,19 +7,12 @@
 	},
 	"item": [
 		{
-			"name": "Trust proof - id",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
+			"name": "DID",
 			"request": {
-				"method": "GET",
+				"method": "POST",
 				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": ""
-				},
 				"url": {
-					"raw": "http://127.0.0.1:8081/api/proofs/0xc720baded3415628367aacfe2554377fe3d7f6a27f77392738eecec02ca9a2000000",
+					"raw": "http://127.0.0.1:8081/api/dids",
 					"protocol": "http",
 					"host": [
 						"127",
@@ -30,44 +23,7 @@
 					"port": "8081",
 					"path": [
 						"api",
-						"proofs",
-						"0xc720baded3415628367aacfe2554377fe3d7f6a27f77392738eecec02ca9a2000000"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Trust proof - query",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "GET",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": ""
-				},
-				"url": {
-					"raw": "http://127.0.0.1:8081/api/proofs?assetId=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-					"protocol": "http",
-					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
-					],
-					"port": "8081",
-					"path": [
-						"api",
-						"proofs"
-					],
-					"query": [
-						{
-							"key": "assetId",
-							"value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-						}
+						"dids"
 					]
 				}
 			},
@@ -111,7 +67,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"asset_hash\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\r\n  \"metadata_hash\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\r\n  \"did\": \"did:iota:rms:0xcaeb852bbfd200c1297056d5c455a01f33055c2c00b10f8664ad4a23026f913a\"\r\n}",
+					"raw": "{ \r\n  \"assetId\": \"id-asset-1\",\r\n  \"assetHash\": \"ffffffffffffffffffffffffffffffffffffffffffff\",\r\n  \"metadataHash\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\r\n  \"did\": \"did:iota:rms:0x65fb57d4406a854ddb4f091f89fdafe5086d257a8972f5406f6ead0408703f62\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -137,12 +93,19 @@
 			"response": []
 		},
 		{
-			"name": "DID",
+			"name": "Trust proof - id",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
 			"request": {
-				"method": "POST",
+				"method": "GET",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
 				"url": {
-					"raw": "http://127.0.0.1:8081/api/dids",
+					"raw": "http://127.0.0.1:8081/api/proofs/0xc720baded3415628367aacfe2554377fe3d7f6a27f77392738eecec02ca9a2000000",
 					"protocol": "http",
 					"host": [
 						"127",
@@ -153,30 +116,57 @@
 					"port": "8081",
 					"path": [
 						"api",
-						"dids"
+						"proofs",
+						"0xc720baded3415628367aacfe2554377fe3d7f6a27f77392738eecec02ca9a2000000"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "Keycloak",
+			"name": "Trust proof - query",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
 			"request": {
-				"auth": {
-					"type": "bearer",
-					"bearer": [
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8081/api/proofs?assetId=id-asset-1",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"proofs"
+					],
+					"query": [
 						{
-							"key": "token",
-							"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJyaEM2dEdjV1d5N1B0VXJPMlAzVW1TaHd2bmg3M2RBNjZNR1o2cHUzMGRjIn0.eyJleHAiOjE2OTAyMDQxMzgsImlhdCI6MTY5MDIwNDA3OCwianRpIjoiNmNhNGU2OTAtNWNhMC00NDZhLWJkOWQtNzE5NGMyZDZiNmI2IiwiaXNzIjoiaHR0cHM6Ly9tb2RlcmF0ZWtjLnRlc3QuY3RpYy5lcy9yZWFsbXMvbWFzdGVyIiwic3ViIjoiODJhYzM5ZjItMjI3Ni00YjI4LWFlNjUtZjA1YjAwZmFlZTQ3IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiYWRtaW4tY2xpIiwic2Vzc2lvbl9zdGF0ZSI6ImQ4NDA2N2M3LWI0ZGEtNDhkZi04OTc0LTk5M2Y4YjI0OTljNCIsImFjciI6IjEiLCJzY29wZSI6ImVtYWlsIHByb2ZpbGUiLCJzaWQiOiJkODQwNjdjNy1iNGRhLTQ4ZGYtODk3NC05OTNmOGIyNDk5YzQiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInByZWZlcnJlZF91c2VybmFtZSI6ImFkbWluIn0.NuMySLvdEddIdoPIiOsDr03ztyK-GrdVsbMPKw9oCHIYb1fqgiaiMpMlqYn1L2VPCG-Z2uxRHINYfPeSyzsKTyS1DTtdjW_FLYX5fGtrsczzamdFcNzKSh6hx8bfmOz0Zl9ZwzZvezq6Jtxgw6sFwcoFNTjYGgw_heciKKCFC7BIakb6MBUoBjQRg-bAB6zJzy1kxEgsl6hnVFxGnkLHUW4YnYsj9lQnUZSm3LJILyW5OeFOs6fNQScchiTsinHHXlmFAhIUga9f16WEGfomjkO_MqymhmOEriopwmYVEL7Mw7XZIRXG7SaJ_WDcTuKlPkS3CqUAb0YGLy8iQ91XLQ",
-							"type": "string"
+							"key": "assetId",
+							"value": "id-asset-1"
 						}
 					]
-				},
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Nft",
+			"request": {
 				"method": "POST",
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"realm\": \"reald-202d0f\", \"enabled\": true}",
+					"raw": "{\r\n \"assetId\": \"id-asset-1\",\r\n \"nftAlias\": \"ntf-asset-1\",\r\n \"license\": \"CC-BY-4.0\",\r\n \"did\": \"did:iota:rms:0xcaeb852bbfd200c1297056d5c455a01f33055c2c00b10f8664ad4a23026f913a\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -184,17 +174,54 @@
 					}
 				},
 				"url": {
-					"raw": "https://moderatekc.test.ctic.es/admin/realms",
-					"protocol": "https",
+					"raw": "http://127.0.0.1:8081/api/nfts",
+					"protocol": "http",
 					"host": [
-						"moderatekc",
-						"test",
-						"ctic",
-						"es"
+						"127",
+						"0",
+						"0",
+						"1"
 					],
+					"port": "8081",
 					"path": [
-						"admin",
-						"realms"
+						"api",
+						"nfts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Nft",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8081/api/nfts?assetId=id-asset-1",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"nfts"
+					],
+					"query": [
+						{
+							"key": "assetId",
+							"value": "id-asset-1"
+						}
 					]
 				}
 			},

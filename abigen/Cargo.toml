@@ -1,0 +1,13 @@
+[package]
+name = "abigen"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+authors = ["Fondazione LINKS" ]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ethers = { version = "2.0.8", features = ["legacy"] }
+clap = { version = "4.4.2", features = ["derive"] }
+eyre = "0.6.11"

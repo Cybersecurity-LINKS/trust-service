@@ -3,5 +3,5 @@
 // SPDX-License-Identifier: APACHE-2.0
 
 pub mod user;
-pub mod proof;
+pub mod asset;
 pub mod tangle_proof;
