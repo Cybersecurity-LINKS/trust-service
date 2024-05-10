@@ -3,8 +3,6 @@
 This project is a microservice for creating and verifying proofs of data authenticity and data integrity. The application store the proofs on the [IOTA Tangle](https://wiki.iota.org/shimmer/). To answer the requirement that a user should not own crypto tokens, a centralized approach has been used where the service handles the identity keys of the user. The microservice also expose the API to mint an NFT representing a dataset.
 
 ## Getting started  
-## Installation
-<!-- What are the steps required to install your project? Provide a step-by-step description of how to get the development environment running. -->
 
 ### Requirements
 
@@ -15,6 +13,9 @@ This project is a microservice for creating and verifying proofs of data authent
 
 ## Run
 
+Beware of the configuration of the environment variables.
+Note: Modify `.env` and `.mongo.env` reasonably. (`ADDR`, `MONGO_ENDPOINT`, `ASSET_FACTORY_ADDR`,`L2_PRIVATE_KEY`)
+
 ### Locally
 
 For testing the application with MongoDB, follow these steps:
@@ -24,7 +25,7 @@ For testing the application with MongoDB, follow these steps:
 - Use [MongoDB Compass](https://www.mongodb.com/products/compass) to view the database content.
 Note: MongoDB Compass is a tool that can be used to interact with MongoDB databases and inspect their content.
 
-Create smart contract Rust bindings (mandatory the first time or if the smart contracts change)
+Create the smart contract Rust bindings (mandatory the first time or if the smart contracts change)
 ```shell
 cd abigen
 # assuming the ipr-management folder is located in the same root folder of the trust-service
@@ -38,12 +39,9 @@ cd actix-server
 cargo run --release --bin actix-trust-service
 ```
 
-Beware of the configuration of the environment variables.
-Note: Modify `.env` and `.mongo.env` reasonably. (`ADDR`, `MONGO_ENDPOINT`, `ASSET_FACTORY_ADDR`,`L2_PRIVATE_KEY`)
-
 ### Via docker
 
-Before running ..., copy the smart contract to create the Rust bindings (mandatory the first time or if the smart contracts change)
+Copy the smart contract json files to create the Rust bindings (mandatory the first time or if the smart contracts change)
 ```shell
     mkdir smart-contracts
     # assuming the ipr-management folder is located in the same root folder of the trust-service
@@ -56,9 +54,6 @@ Commands for building the app’s container image and starting the app container
 ```shell
 docker compose --profile deploy up -d
 ```
-
-Beware of the configuration of the environment variables.
-Note: Modify `.env` and `.mongo.env` reasonably. (`ADDR`, `MONGO_ENDPOINT`, `ASSET_FACTORY_ADDR`,`L2_PRIVATE_KEY`)
 
 ## Usage
 
