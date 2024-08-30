@@ -35,7 +35,7 @@ async fn mint_nft(
     let asset_factory_sc = AssetFactory::new(address, signer);
     let asset_data = AssetData { 
         name: req.nft_alias.clone(), 
-        symbol: "todo!()".to_string(), // TODO: update the request or compute it
+        symbol: req.nft_symbol.clone(),
         proof_id: asset.proof_id.clone(), 
         did: req.did.clone(), 
         asset_id: req.asset_id.clone(),
@@ -82,6 +82,7 @@ async fn get_nft_by_asset(
 
     let license = asset_sc.get_license().await.map_err(|err| TrustServiceError::ContractError(err.to_string()))?;
     let did = asset_sc.get_did().await.map_err(|err| TrustServiceError::ContractError(err.to_string()))?;
+    //TODO: add check query.asset_id == asset_sc.get_asset_id()
 
     let respose = NftResponse{ asset_id: query.asset_id.clone(), nft_address: nft_addr, license, did };
     Ok(HttpResponse::Ok().json(respose))

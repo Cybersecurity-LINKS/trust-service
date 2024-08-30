@@ -166,7 +166,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n \"assetId\": \"id-asset-1\",\r\n \"nftAlias\": \"ntf-asset-1\",\r\n \"license\": \"CC-BY-4.0\",\r\n \"did\": \"did:iota:rms:0xcaeb852bbfd200c1297056d5c455a01f33055c2c00b10f8664ad4a23026f913a\"\r\n}",
+					"raw": "{\r\n \"assetId\": \"id-asset-1\",\r\n \"nftAlias\": \"ntf-asset-1\",\r\n \"nftSymbol\": \"AST-1\",\r\n \"license\": \"CC-BY-4.0\",\r\n \"did\": \"did:iota:rms:0xcaeb852bbfd200c1297056d5c455a01f33055c2c00b10f8664ad4a23026f913a\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"

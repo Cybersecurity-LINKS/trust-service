@@ -18,6 +18,7 @@ pub struct ProofRequest {
 pub struct NftRequest {
     pub asset_id: String,
     pub nft_alias: String,
+    pub nft_symbol: String,
     pub license: String,
     pub did: String
 }
