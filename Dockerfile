@@ -9,7 +9,7 @@ COPY . .
 # COPY .mongo.env .mongo.env
 RUN  apk add --no-cache make musl-dev clang llvm gcc libc-dev clang-dev binutils g++ linux-headers libstdc++ libgcc libressl-dev
 ENV RUSTFLAGS="-C target-feature=-crt-static"
-RUN cd abigen  \ 
+RUN cd abigen  \ \
     && cargo run -- --contract AssetFactory --abi-source "../smart-contracts/AssetFactory.json" \
     && cargo run -- --contract Asset --abi-source "../smart-contracts/Asset.json" \
     && cd ..

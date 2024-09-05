@@ -7,6 +7,7 @@ use std::sync::Arc;
 use actix_web::{web, App, HttpServer, middleware::Logger};
 use ethers::{middleware::SignerMiddleware, providers::{Http, Provider}, signers::{LocalWallet, Signer}};
 use trust_server::{controllers::{did_controller, nft_controller, proof_controller}, services::{iota_state::IotaState, mongodb_repo::MongoRepo}};
+use trust_server::controllers::log_controller;
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
@@ -50,6 +51,7 @@ async fn main() -> anyhow::Result<()> {
                 .configure(did_controller::scoped_config)
                 .configure(proof_controller::scoped_config)
                 .configure(nft_controller::scoped_config)
+                .configure(log_controller::scoped_config)
             )
             .wrap(Logger::default())
     })

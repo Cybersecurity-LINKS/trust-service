@@ -5,7 +5,7 @@ info:
     platform.
   license:
     name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.0
 externalDocs:
   description: Find out more about MODERATE
@@ -19,6 +19,8 @@ tags:
   description: Everything about proofs.
 - name: NFTs
   description: Everything about NFTs (ERC-721).
+- name: Logs
+  description: Everything about log files.
 paths:
   /dids:
       post:
@@ -162,6 +164,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NftResponse'
+  /log:
+    get:
+      tags:
+        - Logs
+      summary: Retrieve the log file
+      description: "This endpoint retrieves the log file from IPFS using the CID (Content Identifier) stored in the conventional storage. The file corresponding to the CID will be sent back to the client."
+      operationId: get_log
+      responses:
+        200:
+          description: File retrieved successfully
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+    post:
+      tags:
+        - Logs
+      summary: Upload or Update the log file to IPFS
+      description: "This endpoint allows to upload the log file to IPFS."
+      operationId: upload_log
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The log file to be uploaded
+        required: true
+      responses:
+        200:
+          description: File uploaded successfully
+
 components:
   schemas:
     ProofRequest:
@@ -227,6 +265,28 @@ components:
           type: string
           description: DID of the user, owner of the asset
       description: Input for minting the NFT
+    LogRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+          description: The log file to be uploaded
+      required:
+        - file
+      description: Input for uploading the log file
+    LogUploadResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Confirmation message
+      description: Response after uploading the log file
+    LogFileResponse:
+      type: string
+      format: binary
+      description: The log file content
+
   responses:
     UnathorizedError:
       description: Access token is missing or invalid

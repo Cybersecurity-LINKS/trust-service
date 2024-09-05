@@ -1,6 +1,7 @@
 # Trust service
 
 This project is a microservice for creating and verifying proofs of data authenticity and data integrity. The application store the proofs on the [IOTA Tangle](https://wiki.iota.org/shimmer/). To answer the requirement that a user should not own crypto tokens, a centralized approach has been used where the service handles the identity keys of the user. The microservice also expose the API to mint an NFT representing a dataset.
+The microservice logs are stored on IPFS and the CID to retrieve them is stored in traditional storage.
 
 ## Getting started  
 
@@ -19,7 +20,7 @@ Note: Modify `.env` and `.mongo.env` reasonably. (`ADDR`, `MONGO_ENDPOINT`, `ASS
 ### Locally
 
 For testing the application with MongoDB, follow these steps:
-- Run `docker compose --profile dev up -d` to start the MongoDB container.
+- Run `docker compose --profile dev up -d` to start the MongoDB and IPFS containers.
 - Create a database called `MODERATE`.
 - Create a collection called `Users`.
 - Use [MongoDB Compass](https://www.mongodb.com/products/compass) to view the database content.
