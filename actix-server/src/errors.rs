@@ -58,6 +58,8 @@ pub enum TrustServiceError {
     MongoFileNotFound,
     #[error("IPFS upload error")]
     IpfsUploadError,
+    #[error("IPFS connection error")]
+    IpfsConnError,
 
     #[error("Multipart error: {0}")]
     MultipartError(String),
@@ -103,6 +105,7 @@ impl ResponseError for TrustServiceError {
             TrustServiceError::CustomError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             TrustServiceError::MongoFileNotFound => StatusCode::NOT_FOUND,
             TrustServiceError::IpfsUploadError => StatusCode::INTERNAL_SERVER_ERROR,
+            TrustServiceError::IpfsConnError => StatusCode::INTERNAL_SERVER_ERROR,
             TrustServiceError::MultipartError(_) => StatusCode::BAD_REQUEST,
         }
     }

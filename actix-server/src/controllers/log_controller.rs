@@ -1,9 +1,11 @@
+use std::env;
 use std::io::{Cursor};
 use actix_web::{get, post};
 use actix_web::{web, HttpResponse, Error};
 use actix_multipart::Multipart;
+use actix_web::http::uri::Scheme;
 use futures_util::{StreamExt as _, TryStreamExt};
-use ipfs_api_backend_actix::{IpfsApi, IpfsClient};
+use ipfs_api_backend_actix::{IpfsApi, IpfsClient, TryFromUri};
 use log::log;
 use crate::errors::TrustServiceError;
 use crate::models::log_model::Log;
@@ -58,7 +60,13 @@ async fn publish_log(mut payload: Multipart, mongodb_repo: web::Data<MongoRepo>)
     }
 
     // Upload the file on IPFS
-    let ipfs_client = IpfsClient::default();
+    let ipfs_client =
+        if env::var("RUNNING_IN_DOCKER").is_ok(){
+            IpfsClient::from_host_and_port(Scheme::HTTP, "ipfs", 5001).unwrap()
+        } else {
+            IpfsClient::default()
+        };
+
     let data = Cursor::new(file_data);
     let add_result = ipfs_client.add(data).await;
 
@@ -92,7 +100,12 @@ async fn get_log(mongodb_repo: web::Data<MongoRepo>) -> Result<HttpResponse, Err
     // get the CID from the DB
     let cid = mongodb_repo.get_log_cid().await?;
 
-    let ipfs_client = IpfsClient::default();
+    let ipfs_client =
+        if env::var("RUNNING_IN_DOCKER").is_ok(){
+            IpfsClient::from_host_and_port(Scheme::HTTP, "ipfs", 5001).unwrap()
+        } else {
+            IpfsClient::default()
+        };
 
     log::info!("Retrieving from IPFS");
 
