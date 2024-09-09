@@ -1,3 +1,4 @@
+use std::env;
 use anyhow::Result;
 
 use mongodb::options::UpdateOptions;
@@ -29,8 +30,17 @@ impl MongoRepo {
         .expect("$MONGO_INITDB_ROOT_USERNAME must be set.");
         let mongo_pass = std::env::var("MONGO_INITDB_ROOT_PASSWORD")
         .expect("$MONGO_INITDB_ROOT_PASSWORD must be set.");
-        let mongo_endpoint = std::env::var("MONGO_ENDPOINT")
-        .expect("$MONGO_ENDPOINT must be set.");
+
+        let mut mongo_endpoint="".to_string();
+        if env::var("RUNNING_IN_DOCKER").is_ok(){
+            mongo_endpoint = std::env::var("MONGO_ENDPOINT_D")
+                .expect("$MONGO_ENDPOINT_D must be set.");
+        } else {
+            mongo_endpoint = std::env::var("MONGO_ENDPOINT_L")
+                .expect("$MONGO_ENDPOINT_L must be set.");
+        };
+
+
 
         let mongo_uri = format!("mongodb://{mongo_usr}:{mongo_pass}@{mongo_endpoint}");
         let mongo_client = MongoClient::with_uri_str(mongo_uri)
