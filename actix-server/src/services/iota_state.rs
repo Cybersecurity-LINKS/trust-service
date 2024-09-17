@@ -9,6 +9,7 @@ use anyhow::Result;
 
 use crypto::keys::bip39::Mnemonic;
 use identity_iota::core::ToJson;
+use identity_iota::credential::Jws;
 use identity_iota::iota::IotaDID;
 use identity_iota::iota::block::output::AliasOutput;
 use identity_iota::iota::IotaClientExt;

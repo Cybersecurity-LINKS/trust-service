@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "5b64f148-f670-4e7b-b3f1-d82666fe7fa9",
+		"_postman_id": "3124d804-8f16-4efc-9ddd-c59042531908",
 		"name": "Trust-service",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "18352790"
+		"_exporter_id": "38070133"
 	},
 	"item": [
 		{
@@ -67,7 +67,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{ \r\n  \"assetId\": \"id-asset-1\",\r\n  \"assetHash\": \"ffffffffffffffffffffffffffffffffffffffffffff\",\r\n  \"metadataHash\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\r\n  \"did\": \"did:iota:rms:0x65fb57d4406a854ddb4f091f89fdafe5086d257a8972f5406f6ead0408703f62\"\r\n}",
+					"raw": "{ \r\n  \"assetId\": \"id-asset-1\",\r\n  \"assetHash\": \"ffffffffffffffffffffffffffffffffffffffffffff\",\r\n  \"metadataHash\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\r\n  \"did\": \"did:iota:rms:0x96782e549a59cd2ac51f2e492562f30ee3dce5870d321a9f5012b5064cdc14c1\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -105,7 +105,7 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "http://127.0.0.1:8081/api/proofs/0xc720baded3415628367aacfe2554377fe3d7f6a27f77392738eecec02ca9a2000000",
+					"raw": "http://127.0.0.1:8081/api/proofs/0x5740868533453e9ee44b34d5c29e2a3329bd1b7eab5a8d4a659007d2d2eb9db20000",
 					"protocol": "http",
 					"host": [
 						"127",
@@ -117,7 +117,7 @@
 					"path": [
 						"api",
 						"proofs",
-						"0xc720baded3415628367aacfe2554377fe3d7f6a27f77392738eecec02ca9a2000000"
+						"0x5740868533453e9ee44b34d5c29e2a3329bd1b7eab5a8d4a659007d2d2eb9db20000"
 					]
 				}
 			},
@@ -166,7 +166,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n \"assetId\": \"id-asset-1\",\r\n \"nftAlias\": \"ntf-asset-1\",\r\n \"license\": \"CC-BY-4.0\",\r\n \"did\": \"did:iota:rms:0xcaeb852bbfd200c1297056d5c455a01f33055c2c00b10f8664ad4a23026f913a\"\r\n}",
+					"raw": "{\r\n \"assetId\": \"id-asset-1\",\r\n \"nftAlias\": \"ntf-asset-1\",\r\n \"nftSymbol\": \"AST-1\",\r\n \"license\": \"CC-BY-4.0\",\r\n \"did\": \"did:iota:rms:0xcaeb852bbfd200c1297056d5c455a01f33055c2c00b10f8664ad4a23026f913a\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -224,6 +224,77 @@
 						}
 					]
 				}
+			},
+			"response": []
+		},
+		{
+			"name": "Log",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "",
+							"type": "file",
+							"src": []
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8081/api/log",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"log"
+					]
+				},
+				"description": "Get Log from IPFS"
+			},
+			"response": []
+		},
+		{
+			"name": "Log",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "",
+							"type": "file",
+							"src": ""
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8081/api/log",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"log"
+					]
+				},
+				"description": "Publish a file on IPFS"
 			},
 			"response": []
 		}

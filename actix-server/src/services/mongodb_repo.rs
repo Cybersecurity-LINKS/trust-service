@@ -1,3 +1,4 @@
+use std::env;
 use anyhow::Result;
 
 use mongodb::options::UpdateOptions;
@@ -11,12 +12,15 @@ use serde_json::Value;
 use crate::errors::TrustServiceError;
 use crate::models::asset::Asset;
 use crate::models::user::User;
+use crate::models::log_model::Log;
 
 pub struct MongoRepo {
     user_collection: Collection<User>,
+    log_collection: Collection<Log>
 }
 
 pub const USER_COLL_NAME: &str = "Users";
+pub const LOG_COLL_NAME: &str = "Log_IPFS";
 
 impl MongoRepo {
     pub async fn init() -> Self {
@@ -26,8 +30,17 @@ impl MongoRepo {
         .expect("$MONGO_INITDB_ROOT_USERNAME must be set.");
         let mongo_pass = std::env::var("MONGO_INITDB_ROOT_PASSWORD")
         .expect("$MONGO_INITDB_ROOT_PASSWORD must be set.");
-        let mongo_endpoint = std::env::var("MONGO_ENDPOINT")
-        .expect("$MONGO_ENDPOINT must be set.");
+
+        let mut mongo_endpoint="".to_string();
+        if env::var("RUNNING_IN_DOCKER").is_ok(){
+            mongo_endpoint = std::env::var("MONGO_ENDPOINT_D")
+                .expect("$MONGO_ENDPOINT_D must be set.");
+        } else {
+            mongo_endpoint = std::env::var("MONGO_ENDPOINT_L")
+                .expect("$MONGO_ENDPOINT_L must be set.");
+        };
+
+
 
         let mongo_uri = format!("mongodb://{mongo_usr}:{mongo_pass}@{mongo_endpoint}");
         let mongo_client = MongoClient::with_uri_str(mongo_uri)
@@ -39,8 +52,9 @@ impl MongoRepo {
 
         let db = mongo_client.database(mongo_database.as_str());
         let user_collection: Collection<User> = db.collection(USER_COLL_NAME);
+        let log_collection: Collection<Log> = db.collection(LOG_COLL_NAME);
 
-        MongoRepo { user_collection }
+        MongoRepo { user_collection, log_collection }
     }
 
     pub async fn store_user(&self, user: User) -> Result<InsertOneResult, TrustServiceError> {
@@ -164,4 +178,73 @@ impl MongoRepo {
         Ok(())
     }
 
+    /// This function takes a log object and stores it in the Mongo DB.
+    /// The purpose of the function is to update the CID of the log file
+    /// stored in the DB. The DB matches a name to a CID.
+    /// There should be only one document in the DB where the field, name,
+    /// does not change, while the CID field is updated on each request.
+    ///
+    /// If the document does not exist, this function will create it.
+    ///
+    /// # Parameters
+    /// * log - the document to save
+    pub async fn store_log_cid(&self, log: Log) -> Result<(), TrustServiceError> {
+        log::info!("Storing information in db...");
+        log::info!("File name: {}, CID: {}", log.name, log.cid);
+
+        // definition of a filter for the find_one_and_replace
+        let filter = doc! { "name": &log.name };
+
+        // look for the document to update or add
+        // find_one_... because there must be only one document in the DB
+        match self.log_collection.find_one_and_replace(filter, &log, None).await {
+            Ok(Some(_)) => { //Document found and updated
+                log::info!("Log Updated");
+                Ok(())
+            }
+            Ok(None) => { // Document not found and inserted
+                match self.log_collection.insert_one(&log, None).await {
+                    Ok(_) => {
+                        log::info!("Log Inserted");
+                        Ok(())
+                    }
+                    Err(err) => Err(TrustServiceError::MongoDbError(err))
+                }
+            }
+            Err(err) => Err(TrustServiceError::MongoDbError(err))
+        }
+
+    }
+
+    /// This function returns the CID of the log file.
+    /// There must be only one document in the DB inside the Log_IPFS collection.
+    /// The name of this document is fixed in the .mongo.env file.
+    /// This function reads the name of the file, looks for it in the DB and then
+    /// returns the CID field present in that document.
+    /// The CID is the identifier of the file within IPFS.
+    pub async fn get_log_cid(&self) -> Result<String, TrustServiceError>{
+
+        // read the filename of the log file from .mongo.env
+        let log_filename = std::env::var("LOG_FILE_NAME")
+            .expect("$LOG_FILE_NAME must be set.");
+
+        // define the filter
+        let filter = doc! { "name": log_filename };
+
+        log::info!("Looking in the DB");
+
+        // look for the document
+        match self.log_collection.find_one(filter, None).await {
+            Ok(Some(log)) => {// document found
+                log::info!("Log file from the DB {:?}", log);
+                Ok(log.cid)
+            }
+            Ok(None) => {// document not found
+                Err(TrustServiceError::MongoFileNotFound)
+            }
+            Err(err) => {
+                Err(TrustServiceError::MongoDbError(err))
+            }
+        }
+    }
 }

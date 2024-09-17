@@ -5,6 +5,7 @@
 pub mod proof_controller;
 pub mod did_controller;
 pub mod nft_controller;
+pub mod log_controller;
 
 use serde::Deserialize;
 

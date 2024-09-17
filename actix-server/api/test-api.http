@@ -1,0 +1,42 @@
+###
+POST http://127.0.0.1:8081/api/dids
+
+###
+GET http://127.0.0.1:8081/api/dids/did:iota:rms:0x237db3c5baa846f8f75552a239a01e03c8982c856e8f8f1a3c1fdc9de224f66f
+
+###
+POST http://127.0.0.1:8081/api/proofs
+Content-Type: application/json
+
+{
+  "assetId": "25",
+  "assetHash": "vukvuk",
+  "metadataHash": "uvuv",
+  "did": "did:iota:rms:0x237db3c5baa846f8f75552a239a01e03c8982c856e8f8f1a3c1fdc9de224f66f"
+}
+
+###
+GET http://127.0.0.1:8081/api/proofs?
+    assetId=25
+
+###
+GET http://127.0.0.1:8081/api/proofs/0x0f1d6597ba3bc2b60ea9cda55b7320923372d5012b1651e00b6a5eedc3f0c3f90000
+
+###
+POST http://127.0.0.1:8081/api/nfts
+Content-Type: application/json
+
+{
+  "assetId": "id-asset-1",
+  "nftAlias": "ntf-asset-1",
+  "nftSymbol": "AST-1",
+  "license": "CC-BY-4.0",
+  "did": "did:iota:rms:0xcaeb852bbfd200c1297056d5c455a01f33055c2c00b10f8664ad4a23026f913a"
+}
+
+###
+GET http://127.0.0.1:8081/api/nfts?
+    assetId=25
+
+###
+GET http://localhost:8081/api/log

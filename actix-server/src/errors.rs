@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: APACHE-2.0
 
+use actix_multipart::MultipartError;
 use actix_web::{HttpResponse, ResponseError, http::header::ContentType};
 use reqwest::StatusCode;
 
@@ -52,8 +53,23 @@ pub enum TrustServiceError {
     #[error("Error: {0}")]
     CustomError(String),
     #[error("Generic error")]
-    GenericError(#[from] anyhow::Error)
-}   
+    GenericError(#[from] anyhow::Error),
+    #[error("File not Found in Mongo")]
+    MongoFileNotFound,
+    #[error("IPFS upload error")]
+    IpfsUploadError,
+    #[error("IPFS connection error")]
+    IpfsConnError,
+
+    #[error("Multipart error: {0}")]
+    MultipartError(String),
+}
+
+impl From<MultipartError> for TrustServiceError {
+    fn from(err: MultipartError) -> TrustServiceError {
+        TrustServiceError::MultipartError(err.to_string())
+    }
+}
 
 impl ResponseError for TrustServiceError {
 
@@ -87,6 +103,10 @@ impl ResponseError for TrustServiceError {
             TrustServiceError::MissingNftAddress => StatusCode::BAD_REQUEST,
             TrustServiceError::AddressError => StatusCode::INTERNAL_SERVER_ERROR,
             TrustServiceError::CustomError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            TrustServiceError::MongoFileNotFound => StatusCode::NOT_FOUND,
+            TrustServiceError::IpfsUploadError => StatusCode::INTERNAL_SERVER_ERROR,
+            TrustServiceError::IpfsConnError => StatusCode::INTERNAL_SERVER_ERROR,
+            TrustServiceError::MultipartError(_) => StatusCode::BAD_REQUEST,
         }
     }
 }

@@ -5,3 +5,4 @@
 pub mod user;
 pub mod asset;
 pub mod tangle_proof;
+pub mod log_model;

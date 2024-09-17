@@ -14,6 +14,7 @@ use identity_iota::storage::JwsSignatureOptions;
 use identity_eddsa_verifier::EdDSAJwsVerifier;
 use serde::Serialize;
 use serde::Deserialize;
+use serde_json::json;
 
 use crate::services::iota_state::MemStorage;
 use crate::errors::TrustServiceError;
@@ -24,7 +25,7 @@ use crate::errors::TrustServiceError;
 pub struct TangleProof {
     metadata_digest: String,
     dataset_digest: String,
-    jws: String,
+    pub jws: String,
     pub did_publisher: String, //TODO: beware of pub
 }
 
@@ -41,18 +42,18 @@ impl TangleProof {
     ) -> Result<Self, TrustServiceError> {
 
         // TODO: (case 1 we receive the hash computed from another service) if the input are already a digest, is this necessary?
-        let digest_metadata: [u8; 32] = Blake2b256::digest(metadata_digest.as_bytes()).as_slice().try_into().expect("Wrong length");
-        let digest_dataset: [u8; 32]  = Blake2b256::digest(dataset_digest.as_bytes()).as_slice().try_into().expect("Wrong length");
+        // let digest_metadata: [u8; 32] = Blake2b256::digest(metadata_digest.as_bytes()).as_slice().try_into().expect("Wrong length");
+        // let digest_dataset: [u8; 32]  = Blake2b256::digest(dataset_digest.as_bytes()).as_slice().try_into().expect("Wrong length");
 
-        let digests_sum = [digest_metadata, digest_dataset].concat();
+        // let digests_sum = [digest_metadata, digest_dataset].concat();
 
-        // let payload = json!({
-        //     "metadataHash": metadata_digest,
-        //     "datasetHash": dataset_digest,
-        // });
+        let payload = json!({
+            "metadataHash": metadata_digest,
+            "datasetHash": dataset_digest,
+        });
 
         // Compute signature
-        let jws = iota_document.create_jws(&storage, &fragment, &digests_sum, &JwsSignatureOptions::default()).await?;
+        let jws = iota_document.create_jws(&storage, &fragment, serde_json::to_vec(&payload).unwrap().as_slice(), &JwsSignatureOptions::default()).await?;
         // Verify signature
         let _decoded_jws = iota_document.verify_jws(
             &jws,
@@ -60,10 +61,9 @@ impl TangleProof {
             &EdDSAJwsVerifier::default(),
             &JwsVerificationOptions::default(),
         )?; // TODO: catch the error on caller and log ("Signature NOT Valid")
-        
         Ok(Self{
-            metadata_digest: general_purpose::STANDARD.encode(digest_metadata), 
-            dataset_digest: general_purpose::STANDARD.encode(digest_dataset), 
+            metadata_digest: metadata_digest.clone(), 
+            dataset_digest: dataset_digest.clone(), 
             jws: jws.into(),
             did_publisher: did_publisher,
         })

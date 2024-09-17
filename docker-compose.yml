@@ -15,6 +15,9 @@ services:
     #   - 
     depends_on:
       - mongodb_container
+      - ipfs
+    environment:
+      - RUNNING_IN_DOCKER=true
     profiles:
       - deploy
       
@@ -31,5 +34,21 @@ services:
     profiles:
       - dev
       - deploy
+
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: ipfs
+    ports:
+      - "4001:4001"
+      - "5001:5001"
+      - "8080:8080"
+    volumes:
+      - ipfs_data:/data/ipfs
+    restart: unless-stopped
+    profiles:
+      - dev
+      - deploy
+
 volumes:
   mongodb_data_container:
+  ipfs_data:

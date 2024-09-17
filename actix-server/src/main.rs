@@ -2,11 +2,14 @@
 //
 // SPDX-License-Identifier: APACHE-2.0
 
+use std::env;
 use std::sync::Arc;
 
 use actix_web::{web, App, HttpServer, middleware::Logger};
 use ethers::{middleware::SignerMiddleware, providers::{Http, Provider}, signers::{LocalWallet, Signer}};
+use log::log;
 use trust_server::{controllers::{did_controller, nft_controller, proof_controller}, services::{iota_state::IotaState, mongodb_repo::MongoRepo}};
+use trust_server::controllers::log_controller;
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
@@ -17,7 +20,17 @@ async fn main() -> anyhow::Result<()> {
 
     env_logger::init();
 
-    let address = std::env::var("ADDR").expect("$ADDR must be set.");
+    let mut address = "".to_string();
+
+    if env::var("RUNNING_IN_DOCKER").is_ok(){
+        address = std::env::var("ADDR_D").expect("$ADDR must be set.");
+        log::info!("Runnig in Docker {}", address);
+    } else {
+        address = std::env::var("ADDR_L").expect("$ADDR must be set.");
+        log::info!("Runnig in Local {}", address);
+    };
+
+    //let address = std::env::var("ADDR").expect("$ADDR must be set.");
     let port = std::env::var("PORT").expect("$PORT must be set.").parse::<u16>()?;
     
     let db: MongoRepo = MongoRepo::init().await;
@@ -50,6 +63,7 @@ async fn main() -> anyhow::Result<()> {
                 .configure(did_controller::scoped_config)
                 .configure(proof_controller::scoped_config)
                 .configure(nft_controller::scoped_config)
+                .configure(log_controller::scoped_config)
             )
             .wrap(Logger::default())
     })
