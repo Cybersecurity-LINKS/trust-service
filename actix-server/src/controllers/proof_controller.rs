@@ -17,12 +17,15 @@ use crate::models::tangle_proof::TangleProof;
 async fn get_proof(
     path: web::Path<String>,
     iota_state: web::Data<IotaState>,
+    mongo_repo: web::Data<MongoRepo>
 ) -> Result<HttpResponse, TrustServiceError> {
     // TODO: check if it is a proof in the db
     let proof_id = path.into_inner();
-    let proof = iota_state.resolve_proof(proof_id).await?;
+    let proof = iota_state.resolve_proof(proof_id.clone()).await?;
     
     let publisher_document: IotaDocument = iota_state.resolve_did(proof.did_publisher.as_str()).await?;
+    //log::warn!("TROVATO2: {:?}", proof.did_publisher.as_str());
+    mongo_repo.get_asset_by_proof(proof_id.clone()).await?;
     proof.verify(&publisher_document)?;
 
     Ok(HttpResponse::Ok().json(proof))

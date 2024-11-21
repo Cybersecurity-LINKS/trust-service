@@ -63,6 +63,11 @@ pub enum TrustServiceError {
 
     #[error("Multipart error: {0}")]
     MultipartError(String),
+    
+    #[error("Error opening file")]
+    FileOpenError,
+    #[error("Error while writing file")]
+    FileWriteError,
 }
 
 impl From<MultipartError> for TrustServiceError {
@@ -107,6 +112,8 @@ impl ResponseError for TrustServiceError {
             TrustServiceError::IpfsUploadError => StatusCode::INTERNAL_SERVER_ERROR,
             TrustServiceError::IpfsConnError => StatusCode::INTERNAL_SERVER_ERROR,
             TrustServiceError::MultipartError(_) => StatusCode::BAD_REQUEST,
+            TrustServiceError::FileOpenError => StatusCode::INTERNAL_SERVER_ERROR,
+            TrustServiceError::FileWriteError => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
