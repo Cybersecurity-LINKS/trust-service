@@ -1,6 +1,6 @@
 mongodb_data_container
 # smart-contracts
-/ipfs/
+ipfs
 blocks
 .idea
 data
