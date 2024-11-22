@@ -1,4 +1,5 @@
 use std::env;
+use std::fs::File;
 use std::io::{Cursor};
 use actix_web::{get, post};
 use actix_web::{web, HttpResponse, Error};
@@ -11,53 +12,16 @@ use crate::errors::TrustServiceError;
 use crate::models::log_model::Log;
 use crate::services::mongodb_repo::MongoRepo;
 
-/// This API takes a file, checks that the filename is correct,
-/// then it publishes that file to IPFS.
+/// This API takes the log file,
+/// then it publishes it to IPFS.
 /// It gets the CID from IPFS, then stores the CID in the DB.
-/// Update the document in the DB with the same name or create it.
+/// When storing the CID it updates the document in the DB with the same name or create it.
 #[post("")]
 async fn publish_log(mut payload: Multipart, mongodb_repo: web::Data<MongoRepo>) -> Result<HttpResponse, TrustServiceError> {
 
-    let mut file_count = 0;
-    let mut file_data = Vec::new();
-    let mut filename = String::new();
+    let filename = env::var("LOG_FILE_NAME").expect("$LOG_FILE_NAME must be set.");
 
-    while let Some(item) = payload.next().await {
-        // Read a file for each loop
-        file_count += 1;// increment the number of files
-        if file_count > 1 { // if more that a loop is executed, error just one file allowed
-            return Ok(HttpResponse::BadRequest().body("Only one file allowed"));
-        }
-
-        let mut field = item?;
-        if let Some(content_disposition) = field.content_disposition() {
-            if let Some(fname) = content_disposition.get_filename() {
-                filename = fname.to_string();
-                if filename == "" { file_count -= 1}//if the name is empy no file was sent decrement file_count
-
-                // this 'while' stores the file in the file_data variable
-                while let Some(chunk) = field.next().await {
-                    let data = chunk?;
-                    file_data.extend_from_slice(&data);
-                }
-            } else {
-                return Ok(HttpResponse::BadRequest().body("Cannot read filename"));
-            }
-        } else {
-            return Ok(HttpResponse::BadRequest().body("Content-Disposition missing"));
-        }
-    }
-
-    // No file check
-    if file_count == 0 {
-        return Ok(HttpResponse::BadRequest().body("Missing file"));
-    }
-
-    // Verification of the file name
-    if filename !=  std::env::var("LOG_FILE_NAME")
-        .expect("$LOG_FILE_NAME must be set.") {
-        return Ok(HttpResponse::BadRequest().body("Wrong file"));
-    }
+    let file = File::open(filename.clone()).map_err(|e| TrustServiceError::FileOpenError)?;
 
     // Upload the file on IPFS
     let ipfs_client =
@@ -66,9 +30,8 @@ async fn publish_log(mut payload: Multipart, mongodb_repo: web::Data<MongoRepo>)
         } else {
             IpfsClient::default()
         };
-
-    let data = Cursor::new(file_data);
-    let add_result = ipfs_client.add(data).await;
+    
+    let add_result = ipfs_client.add(file).await;
 
     let cid = match add_result {
         Ok(res) => {

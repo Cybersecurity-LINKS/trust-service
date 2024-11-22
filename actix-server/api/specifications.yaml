@@ -182,20 +182,9 @@ paths:
     post:
       tags:
         - Logs
-      summary: Upload or Update the log file to IPFS
-      description: "This endpoint allows to upload the log file to IPFS."
+      summary: Upload the log file to IPFS
+      description: "This endpoint uploads the log file to IPFS."
       operationId: upload_log
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-                  description: The log file to be uploaded
-        required: true
       responses:
         200:
           description: File uploaded successfully
