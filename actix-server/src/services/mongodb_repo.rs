@@ -119,6 +119,7 @@ impl MongoRepo {
         match projected_collection.find_one(Some(filter), find_options).await {
             Ok(Some(user)) => {
                 log::info!("{} - {}", user["did"], asset_id);
+                //log accessed asset to file
                 file.write_all(format!("{},\"{}\"\n", user["did"], asset_id).as_bytes()).map_err(|e| TrustServiceError::FileWriteError)?;
                 Ok(serde_json::from_value(user["assets"][0].clone())?)
                    
@@ -156,6 +157,7 @@ impl MongoRepo {
             Ok(Some(user)) => {
                 let asset_id = user["assets"][0]["assetId"].clone().as_str().unwrap().to_string();
                 log::info!("{} - {:?}", user["did"], asset_id);
+                //log accessed asset to file
                 file.write_all(format!("{},\"{}\"\n", user["did"], asset_id).as_bytes()).map_err(|e| TrustServiceError::FileWriteError)?;
                 Ok(serde_json::from_value(user["assets"][0].clone())?)
                    
