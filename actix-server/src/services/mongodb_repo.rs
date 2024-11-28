@@ -16,6 +16,7 @@ use crate::errors::TrustServiceError;
 use crate::models::asset::Asset;
 use crate::models::user::User;
 use crate::models::log_model::Log;
+use crate::controllers::log_controller::publish_log_internal;
 
 pub struct MongoRepo {
     user_collection: Collection<User>,
@@ -121,6 +122,9 @@ impl MongoRepo {
                 log::info!("{} - {}", user["did"], asset_id);
                 //log accessed asset to file
                 file.write_all(format!("{},\"{}\"\n", user["did"], asset_id).as_bytes()).map_err(|e| TrustServiceError::FileWriteError)?;
+                log::warn!("Pushing to IPFS");
+                publish_log_internal(self).await.expect("Error Publishing log");
+                log::warn!("DONE: Pushing to IPFS");
                 Ok(serde_json::from_value(user["assets"][0].clone())?)
                    
             },
@@ -159,6 +163,9 @@ impl MongoRepo {
                 log::info!("{} - {:?}", user["did"], asset_id);
                 //log accessed asset to file
                 file.write_all(format!("{},\"{}\"\n", user["did"], asset_id).as_bytes()).map_err(|e| TrustServiceError::FileWriteError)?;
+                log::warn!("Pushing to IPFS");
+                publish_log_internal(self).await.expect("Error Publishing log");
+                log::warn!("DONE Pushing to IPFS");
                 Ok(serde_json::from_value(user["assets"][0].clone())?)
                    
             },

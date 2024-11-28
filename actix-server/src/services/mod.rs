@@ -4,3 +4,4 @@
 
 pub mod iota_state;
 pub mod mongodb_repo;
+pub mod ipfs;
