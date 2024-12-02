@@ -179,15 +179,6 @@ paths:
               schema:
                 type: string
                 format: binary
-    post:
-      tags:
-        - Logs
-      summary: Upload the log file to IPFS
-      description: "This endpoint uploads the log file to IPFS."
-      operationId: upload_log
-      responses:
-        200:
-          description: File uploaded successfully
 
 components:
   schemas:
@@ -254,23 +245,6 @@ components:
           type: string
           description: DID of the user, owner of the asset
       description: Input for minting the NFT
-    LogRequest:
-      type: object
-      properties:
-        file:
-          type: string
-          format: binary
-          description: The log file to be uploaded
-      required:
-        - file
-      description: Input for uploading the log file
-    LogUploadResponse:
-      type: object
-      properties:
-        message:
-          type: string
-          description: Confirmation message
-      description: Response after uploading the log file
     LogFileResponse:
       type: string
       format: binary

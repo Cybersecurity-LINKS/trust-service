@@ -122,9 +122,10 @@ impl MongoRepo {
                 log::info!("{} - {}", user["did"], asset_id);
                 //log accessed asset to file
                 file.write_all(format!("{},\"{}\"\n", user["did"], asset_id).as_bytes()).map_err(|e| TrustServiceError::FileWriteError)?;
-                log::warn!("Pushing to IPFS");
+                //publish the log to ipfs
+                log::info!("Pushing to IPFS");
                 publish_log_internal(self).await.expect("Error Publishing log");
-                log::warn!("DONE: Pushing to IPFS");
+                log::info!("Log pushed to IPFS");
                 Ok(serde_json::from_value(user["assets"][0].clone())?)
                    
             },
@@ -163,9 +164,10 @@ impl MongoRepo {
                 log::info!("{} - {:?}", user["did"], asset_id);
                 //log accessed asset to file
                 file.write_all(format!("{},\"{}\"\n", user["did"], asset_id).as_bytes()).map_err(|e| TrustServiceError::FileWriteError)?;
-                log::warn!("Pushing to IPFS");
+                //publish the log to ipfs
+                log::info!("Pushing to IPFS");
                 publish_log_internal(self).await.expect("Error Publishing log");
-                log::warn!("DONE Pushing to IPFS");
+                log::info!("Log pushed to IPFS");
                 Ok(serde_json::from_value(user["assets"][0].clone())?)
                    
             },
@@ -253,13 +255,13 @@ impl MongoRepo {
         // find_one_... because there must be only one document in the DB
         match self.log_collection.find_one_and_replace(filter, &log, None).await {
             Ok(Some(_)) => { //Document found and updated
-                log::info!("Log Updated");
+                log::info!("Log Updated in the db");
                 Ok(())
             }
             Ok(None) => { // Document not found and inserted
                 match self.log_collection.insert_one(&log, None).await {
                     Ok(_) => {
-                        log::info!("Log Inserted");
+                        log::info!("Log Inserted in the db");
                         Ok(())
                     }
                     Err(err) => Err(TrustServiceError::MongoDbError(err))

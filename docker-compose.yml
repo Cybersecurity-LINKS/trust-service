@@ -1,5 +1,5 @@
-# TODO: correctly handle 
-version: '3.9'
+# TODO: correctly handle
+#version: '3.9'
 services:
   actix-trust-service:
     build:
@@ -39,9 +39,9 @@ services:
     image: ipfs/kubo:latest
     container_name: ipfs
     ports:
-      - "4001:4001"
+      #- "4001:4001"
       - "5001:5001"
-      - "8080:8080"
+      #- "8080:8080"
     volumes:
       - ipfs_data:/data/ipfs
     restart: unless-stopped
