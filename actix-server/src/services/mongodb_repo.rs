@@ -1,4 +1,6 @@
 use std::env;
+use std::fs::File;
+use std::io::Write;
 use anyhow::Result;
 
 use mongodb::options::UpdateOptions;
@@ -7,12 +9,14 @@ use mongodb::Client as MongoClient;
 use mongodb::bson::doc;
 use mongodb::options::FindOneOptions;
 use mongodb::results::InsertOneResult;
+use serde::Deserializer;
 use serde_json::Value;
 
 use crate::errors::TrustServiceError;
 use crate::models::asset::Asset;
 use crate::models::user::User;
 use crate::models::log_model::Log;
+use crate::controllers::log_controller::publish_log_internal;
 
 pub struct MongoRepo {
     user_collection: Collection<User>,
@@ -90,7 +94,9 @@ impl MongoRepo {
     }
 
     pub async fn get_asset(&self, asset_id: String) -> Result<Asset, TrustServiceError> {
-    
+
+        let mut file = File::options().create(true).append(true).open("dlog.log").map_err(|e| TrustServiceError::FileOpenError)?;
+
         log::info!("Getting Asset information from db...");
         let projected_collection = self.user_collection.clone_with_type::<Value>();
         log::info!("Searching for asset: {:#?}", asset_id);
@@ -107,15 +113,65 @@ impl MongoRepo {
         // Define the projection query, use FindOptions::builder() to set the projection
         let find_options = FindOneOptions::builder().projection(doc! {
             "assets.$": 1,
-            "_id": 0
+            "_id": 0,
+            "did": 1,
         }).build();
 
         match projected_collection.find_one(Some(filter), find_options).await {
             Ok(Some(user)) => {
+                log::info!("{} - {}", user["did"], asset_id);
+                //log accessed asset to file
+                file.write_all(format!("{},\"{}\"\n", user["did"], asset_id).as_bytes()).map_err(|e| TrustServiceError::FileWriteError)?;
+                //publish the log to ipfs
+                log::info!("Pushing to IPFS");
+                publish_log_internal(self).await.expect("Error Publishing log");
+                log::info!("Log pushed to IPFS");
                 Ok(serde_json::from_value(user["assets"][0].clone())?)
                    
             },
             Ok(None) => Err(TrustServiceError::AssetIdNotFound(asset_id)),
+            Err(err) => Err(TrustServiceError::MongoDbError(err))
+        }
+    }
+
+    pub async fn get_asset_by_proof(&self, asset_proof: String) -> Result<Asset, TrustServiceError> {
+
+        let mut file = File::options().create(true).append(true).open("dlog.log").map_err(|e| TrustServiceError::FileOpenError)?;
+
+        log::info!("Getting Asset information from db...");
+        let projected_collection = self.user_collection.clone_with_type::<Value>();
+        log::info!("Searching for asset with proof: {:#?}", asset_proof);
+
+        // Define the filter query
+        let filter = doc! {
+            "assets": {
+                "$elemMatch": {
+                    "proofId": asset_proof.clone()
+                }
+            }
+        };
+
+        // Define the projection query, use FindOptions::builder() to set the projection
+        let find_options = FindOneOptions::builder().projection(doc! {
+            "assets.$": 1,
+            "_id": 0,
+            "did": 1,
+        }).build();
+
+        match projected_collection.find_one(Some(filter), find_options).await {
+            Ok(Some(user)) => {
+                let asset_id = user["assets"][0]["assetId"].clone().as_str().unwrap().to_string();
+                log::info!("{} - {:?}", user["did"], asset_id);
+                //log accessed asset to file
+                file.write_all(format!("{},\"{}\"\n", user["did"], asset_id).as_bytes()).map_err(|e| TrustServiceError::FileWriteError)?;
+                //publish the log to ipfs
+                log::info!("Pushing to IPFS");
+                publish_log_internal(self).await.expect("Error Publishing log");
+                log::info!("Log pushed to IPFS");
+                Ok(serde_json::from_value(user["assets"][0].clone())?)
+                   
+            },
+            Ok(None) => Err(TrustServiceError::AssetIdNotFound(asset_proof)),
             Err(err) => Err(TrustServiceError::MongoDbError(err))
         }
     }
@@ -199,13 +255,13 @@ impl MongoRepo {
         // find_one_... because there must be only one document in the DB
         match self.log_collection.find_one_and_replace(filter, &log, None).await {
             Ok(Some(_)) => { //Document found and updated
-                log::info!("Log Updated");
+                log::info!("Log Updated in the db");
                 Ok(())
             }
             Ok(None) => { // Document not found and inserted
                 match self.log_collection.insert_one(&log, None).await {
                     Ok(_) => {
-                        log::info!("Log Inserted");
+                        log::info!("Log Inserted in the db");
                         Ok(())
                     }
                     Err(err) => Err(TrustServiceError::MongoDbError(err))

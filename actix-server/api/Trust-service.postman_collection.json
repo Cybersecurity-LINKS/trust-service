@@ -263,40 +263,6 @@
 				"description": "Get Log from IPFS"
 			},
 			"response": []
-		},
-		{
-			"name": "Log",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "formdata",
-					"formdata": [
-						{
-							"key": "",
-							"type": "file",
-							"src": ""
-						}
-					]
-				},
-				"url": {
-					"raw": "http://127.0.0.1:8081/api/log",
-					"protocol": "http",
-					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
-					],
-					"port": "8081",
-					"path": [
-						"api",
-						"log"
-					]
-				},
-				"description": "Publish a file on IPFS"
-			},
-			"response": []
 		}
 	]
 }
