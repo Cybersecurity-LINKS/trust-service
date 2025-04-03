@@ -13,7 +13,6 @@ log = "0.4.0"
 dotenv = "0.15.0"
 serde = { version = "1.0.164", features = ["derive"] }
 anyhow = "1.0.71"
-rand = "0.8.5"
 tokio = { version = "1.20.1", default-features = false, features = ["rt"] }
 iota-sdk = { version = "1.1.2", features = ["stronghold", "rocksdb"]}
 identity_iota = { version = "1.0.0", features = ["memstore"]}
@@ -21,12 +20,9 @@ identity_eddsa_verifier = "1.0.0"
 identity_stronghold = "1.0.0"
 iota-crypto = {version = "0.23.0", default-features = false, features = ["ed25519", "random", "blake2b"]}
 mongodb = "2.6.0"
-hex = "0.4.3"
-uuid = "1.4.0"
 serde_json = "1.0.100"
 aes-gcm = "0.10.2"
 base64 = "0.21.0"
-ciborium = "0.2.1"
 env_logger = "0.10.0"
 thiserror = "1.0.50"
 reqwest = "0.11.22"
@@ -34,6 +30,7 @@ ethers = { version = "2.0.8", features = ["legacy"] }
 actix-multipart = "0.7.2"
 ipfs-api-backend-actix = "0.7.0"
 futures-util = "0.3.30"
+deranged = { version = ">=0.4.0, <0.4.1", default-features = false }
 
 [lib]
 name = "trust_server"
