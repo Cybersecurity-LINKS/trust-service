@@ -28,10 +28,13 @@ pub async fn publish_log_internal(mongodb_repo: &MongoRepo) -> Result<(), TrustS
     match mongo_cid_request {
         Ok(cid) => {
             log::info!("Old log to delete CID: {}", cid);
-            ipfs_client.delete_file(cid.as_str()).await?;
+            match ipfs_client.delete_file(cid.as_str()).await {
+                Ok(_) => log::info!("Successfully cleaned up old log file from IPFS"),
+                Err(e) => log::warn!("Failed to clean up old log file from IPFS: {}. Continuing with new file upload.", e),
+            }
         }
         Err(TrustServiceError::MongoFileNotFound) => log::info!("Mongo CID not found"),
-        Err(_) => Err(TrustServiceError::IpfsUploadError)?
+        Err(_) => return Err(TrustServiceError::IpfsUploadError),
     }
     
     log::info!("Publishing new log file to IPFS");

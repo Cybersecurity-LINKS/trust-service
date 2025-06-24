@@ -124,8 +124,10 @@ impl MongoRepo {
                 file.write_all(format!("{},\"{}\"\n", user["did"], asset_id).as_bytes()).map_err(|e| TrustServiceError::FileWriteError)?;
                 //publish the log to ipfs
                 log::info!("Pushing to IPFS");
-                publish_log_internal(self).await.expect("Error Publishing log");
-                log::info!("Log pushed to IPFS");
+                match publish_log_internal(self).await {
+                    Ok(_) => log::info!("Log successfully published to IPFS"),
+                    Err(e) => log::error!("Failed to publish log to IPFS: {}. Continuing with asset retrieval.", e),
+                }
                 Ok(serde_json::from_value(user["assets"][0].clone())?)
                    
             },
@@ -166,8 +168,10 @@ impl MongoRepo {
                 file.write_all(format!("{},\"{}\"\n", user["did"], asset_id).as_bytes()).map_err(|e| TrustServiceError::FileWriteError)?;
                 //publish the log to ipfs
                 log::info!("Pushing to IPFS");
-                publish_log_internal(self).await.expect("Error Publishing log");
-                log::info!("Log pushed to IPFS");
+                match publish_log_internal(self).await {
+                    Ok(_) => log::info!("Log successfully published to IPFS"),
+                    Err(e) => log::error!("Failed to publish log to IPFS: {}. Continuing with asset retrieval.", e),
+                }
                 Ok(serde_json::from_value(user["assets"][0].clone())?)
                    
             },
