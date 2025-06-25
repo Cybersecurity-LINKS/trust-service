@@ -1,7 +1,7 @@
 # Trust service
 
-This project is a microservice for creating and verifying proofs of data authenticity and data integrity. The application store the proofs on the [IOTA Tangle](https://wiki.iota.org/shimmer/). To answer the requirement that a user should not own crypto tokens, a centralized approach has been used where the service handles the identity keys of the user. The microservice also expose the API to mint an NFT representing a dataset.
-The microservice logs are stored on IPFS and the CID to retrieve them is stored in traditional storage.
+This project is a microservice for creating and verifying proofs of data authenticity and data integrity. The application stores the proofs on the [IOTA Tangle](https://wiki.iota.org/shimmer/). To answer the requirement that a user should not own crypto tokens, a centralized approach has been used where the service handles the identity keys of the user. The microservice also exposes the API to mint an NFT representing a dataset.
+The microservice logs are stored on IPFS, and the CID to retrieve them is stored in traditional storage.
 
 ## Getting started  
 
@@ -9,7 +9,7 @@ The microservice logs are stored on IPFS and the CID to retrieve them is stored 
 
 - `Rust` and `Cargo`. Follow the [documentation](https://doc.rust-lang.org/cargo/getting-started/installation.html) to install them. 
 - `Docker` and `Docker compose`
--  Smart contracts already deployed on the same network that the trust-service will interact with. More information [here](https://github.com/MODERATE-Project/ipr-management).
+-  Smart contracts are already deployed on the same network that the trust-service will interact with. More information [here](https://github.com/MODERATE-Project/ipr-management).
 
 
 ## Run
