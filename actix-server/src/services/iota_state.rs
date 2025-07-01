@@ -4,6 +4,7 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::fs;
 
 use anyhow::Result;
 
@@ -60,6 +61,17 @@ pub struct IotaState {
 
 impl IotaState {
 
+  fn ensure_parent_dir_exists(file_path: &str) -> Result<()> {
+    let path = PathBuf::from(file_path);
+    if let Some(parent_dir) = path.parent() {
+      if !parent_dir.exists() {
+        log::info!("Creating parent directory: {:?}", parent_dir);
+        fs::create_dir_all(parent_dir)?;
+      }
+    }
+    Ok(())
+  }
+
   pub async fn init() -> Result<Self> {
 
     log::info!("Creating or recovering key storage...");
@@ -69,6 +81,9 @@ impl IotaState {
 
     let stronghold_path = std::env::var("KEY_STORAGE_STRONGHOLD_SNAPSHOT_PATH")
     .expect("$KEY_STORAGE_STRONGHOLD_SNAPSHOT_PATH must be set.");
+
+    // Ensure parent directory exists for key storage stronghold
+    Self::ensure_parent_dir_exists(&stronghold_path)?;
 
     let mnemonic_string = std::env::var("KEY_STORAGE_MNEMONIC")
     .expect("$KEY_STORAGE_MNEMONIC must be set.");
@@ -290,12 +305,16 @@ impl IotaState {
   
   pub async fn setup_secret_manager() -> Result<StrongholdAdapter> {
 
-    let exists = PathBuf::from(&std::env::var("STRONGHOLD_SNAPSHOT_PATH").unwrap()).exists();
+    let stronghold_path = std::env::var("STRONGHOLD_SNAPSHOT_PATH").unwrap();
+    let exists = PathBuf::from(&stronghold_path).exists();
+
+    // Ensure parent directory exists for wallet stronghold
+    Self::ensure_parent_dir_exists(&stronghold_path)?;
 
     // Setup Stronghold secret_manager
     let secret_manager = StrongholdSecretManager::builder()
         .password(std::env::var("STRONGHOLD_PASSWORD").unwrap())
-        .build(std::env::var("STRONGHOLD_SNAPSHOT_PATH").unwrap())?;
+        .build(stronghold_path)?;
 
     if !exists {
         log::info!("Storing mnemonic...");
@@ -314,10 +333,15 @@ impl IotaState {
     // Create the wallet with the secret_manager and client options
     let client_options = ClientOptions::new().with_node(&std::env::var("NODE_URL").unwrap())?;
 
+    let wallet_db_path = std::env::var("WALLET_DB_PATH").unwrap();
+    
+    // Ensure parent directory exists for wallet database
+    Self::ensure_parent_dir_exists(&wallet_db_path)?;
+
     // Create the wallet
     let wallet = Wallet::builder()
         .with_secret_manager(SecretManager::Stronghold(secret_manager))
-        .with_storage_path(&std::env::var("WALLET_DB_PATH").unwrap())
+        .with_storage_path(&wallet_db_path)
         .with_client_options(client_options)
         .with_coin_type(SHIMMER_COIN_TYPE)
         .finish()
@@ -328,10 +352,15 @@ impl IotaState {
 
   pub async fn create_or_recover_wallet() -> Result<Wallet> {
 
-    let wallet = if PathBuf::from(&std::env::var("WALLET_DB_PATH").unwrap()).exists() {
+    let wallet_db_path = std::env::var("WALLET_DB_PATH").unwrap();
+    
+    // Ensure parent directory exists for wallet database
+    Self::ensure_parent_dir_exists(&wallet_db_path)?;
+
+    let wallet = if PathBuf::from(&wallet_db_path).exists() {
         log::info!("Recovering wallet...");
         let wallet = Wallet::builder()
-        .with_storage_path(&std::env::var("WALLET_DB_PATH").unwrap())
+        .with_storage_path(&wallet_db_path)
         .finish()
         .await?;
 

@@ -1,5 +1,6 @@
 use std::env;
-use std::fs::File;
+use std::fs::{self, File};
+use std::path::PathBuf;
 use std::io::Write;
 use anyhow::Result;
 
@@ -27,6 +28,20 @@ pub const USER_COLL_NAME: &str = "Users";
 pub const LOG_COLL_NAME: &str = "Log_IPFS";
 
 impl MongoRepo {
+    fn ensure_parent_dir_exists(file_path: &str) -> Result<(), std::io::Error> {
+        let path = PathBuf::from(file_path);
+        if let Some(parent_dir) = path.parent() {
+            if !parent_dir.exists() {
+                fs::create_dir_all(parent_dir)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn get_log_file_path() -> String {
+        std::env::var("LOG_FILE_NAME").unwrap_or_else(|_| "dlog.log".to_string())
+    }
+
     pub async fn init() -> Self {
         log::info!("Init mongo");
         
@@ -95,7 +110,9 @@ impl MongoRepo {
 
     pub async fn get_asset(&self, asset_id: String) -> Result<Asset, TrustServiceError> {
 
-        let mut file = File::options().create(true).append(true).open("dlog.log").map_err(|e| TrustServiceError::FileOpenError)?;
+        let log_file_path = Self::get_log_file_path();
+        Self::ensure_parent_dir_exists(&log_file_path).map_err(|_| TrustServiceError::FileOpenError)?;
+        let mut file = File::options().create(true).append(true).open(&log_file_path).map_err(|e| TrustServiceError::FileOpenError)?;
 
         log::info!("Getting Asset information from db...");
         let projected_collection = self.user_collection.clone_with_type::<Value>();
@@ -138,7 +155,9 @@ impl MongoRepo {
 
     pub async fn get_asset_by_proof(&self, asset_proof: String) -> Result<Asset, TrustServiceError> {
 
-        let mut file = File::options().create(true).append(true).open("dlog.log").map_err(|e| TrustServiceError::FileOpenError)?;
+        let log_file_path = Self::get_log_file_path();
+        Self::ensure_parent_dir_exists(&log_file_path).map_err(|_| TrustServiceError::FileOpenError)?;
+        let mut file = File::options().create(true).append(true).open(&log_file_path).map_err(|e| TrustServiceError::FileOpenError)?;
 
         log::info!("Getting Asset information from db...");
         let projected_collection = self.user_collection.clone_with_type::<Value>();
