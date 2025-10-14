@@ -19,7 +19,7 @@ identity_iota = { version = "1.0.0", features = ["memstore"]}
 identity_eddsa_verifier = "1.0.0"
 identity_stronghold = "1.0.0"
 iota-crypto = {version = "0.23.0", default-features = false, features = ["ed25519", "random", "blake2b"]}
-mongodb = "2.6.0"
+mongodb = "3.3.0"
 serde_json = "1.0.100"
 aes-gcm = "0.10.2"
 base64 = "0.21.0"
