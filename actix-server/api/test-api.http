@@ -2,25 +2,25 @@
 POST http://127.0.0.1:8081/api/dids
 
 ###
-GET http://127.0.0.1:8081/api/dids/did:iota:rms:0x237db3c5baa846f8f75552a239a01e03c8982c856e8f8f1a3c1fdc9de224f66f
+GET http://127.0.0.1:8081/api/dids/did:iota:lnk:0xe00971ab8ec13c0073c16cbabf565bc80e81485f1070ff2d1e8de7c3e99c08d9
 
 ###
 POST http://127.0.0.1:8081/api/proofs
 Content-Type: application/json
 
 {
-  "assetId": "25",
-  "assetHash": "vukvuk",
-  "metadataHash": "uvuv",
-  "did": "did:iota:rms:0x237db3c5baa846f8f75552a239a01e03c8982c856e8f8f1a3c1fdc9de224f66f"
+  "assetId": "id-asset-1",
+  "assetHash": "ffffffffffffffffffffffffffffffffffffffffffff",
+  "metadataHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "did": "did:iota:lnk:0xe00971ab8ec13c0073c16cbabf565bc80e81485f1070ff2d1e8de7c3e99c08d9"
 }
 
 ###
 GET http://127.0.0.1:8081/api/proofs?
-    assetId=25
+    assetId=id-asset-1
 
 ###
-GET http://127.0.0.1:8081/api/proofs/0x0f1d6597ba3bc2b60ea9cda55b7320923372d5012b1651e00b6a5eedc3f0c3f90000
+GET http://127.0.0.1:8081/api/proofs/0x5698cac0766369fda5c8c393e1a50d04f3f1467f4d220edc663de688879549b80000
 
 ###
 POST http://127.0.0.1:8081/api/nfts
@@ -31,12 +31,12 @@ Content-Type: application/json
   "nftAlias": "ntf-asset-1",
   "nftSymbol": "AST-1",
   "license": "CC-BY-4.0",
-  "did": "did:iota:rms:0xcaeb852bbfd200c1297056d5c455a01f33055c2c00b10f8664ad4a23026f913a"
+  "did": "did:iota:lnk:0xe00971ab8ec13c0073c16cbabf565bc80e81485f1070ff2d1e8de7c3e99c08d9"
 }
 
 ###
 GET http://127.0.0.1:8081/api/nfts?
-    assetId=25
+    assetId=id-asset-1
 
 ###
 GET http://localhost:8081/api/log
