@@ -84,7 +84,7 @@ impl MongoRepo {
             assets: vec![] 
         };
        
-        match self.user_collection.insert_one(new_user, None).await {
+        match self.user_collection.insert_one(new_user).await {
             Ok(id) => Ok(id),
             Err(err) => {
                 log::info!("{}", err.to_string());
@@ -99,7 +99,7 @@ impl MongoRepo {
         
         let filter = doc! {"did": did};
 
-        match self.user_collection.find_one(Some(filter.clone()), None).await? {
+        match self.user_collection.find_one(filter).await? {
             Some(user) => {
                 Ok(user)
             },
@@ -127,14 +127,13 @@ impl MongoRepo {
             }
         };
 
-        // Define the projection query, use FindOptions::builder() to set the projection
-        let find_options = FindOneOptions::builder().projection(doc! {
-            "assets.$": 1,
-            "_id": 0,
-            "did": 1,
-        }).build();
+        // Define the projection query via fluent API
+        let result = projected_collection
+            .find_one(filter)
+            .projection(doc! { "assets.$": 1, "_id": 0, "did": 1 })
+            .await;
 
-        match projected_collection.find_one(Some(filter), find_options).await {
+        match result {
             Ok(Some(user)) => {
                 log::info!("{} - {}", user["did"], asset_id);
                 //log accessed asset to file
@@ -172,14 +171,15 @@ impl MongoRepo {
             }
         };
 
-        // Define the projection query, use FindOptions::builder() to set the projection
-        let find_options = FindOneOptions::builder().projection(doc! {
-            "assets.$": 1,
-            "_id": 0,
-            "did": 1,
-        }).build();
+        let result = projected_collection
+            .find_one(filter)
+            .projection(doc! {  // Define the projection query via fluent API
+                "assets.$": 1,
+                "_id": 0,
+                "did": 1 })
+            .await;
 
-        match projected_collection.find_one(Some(filter), find_options).await {
+        match result {
             Ok(Some(user)) => {
                 let asset_id = user["assets"][0]["assetId"].clone().as_str().unwrap().to_string();
                 log::info!("{} - {:?}", user["did"], asset_id);
@@ -213,16 +213,17 @@ impl MongoRepo {
             }
         };
 
-        // Define update options
-        let options = UpdateOptions::builder().upsert(false).build();
-
         // Define the update operation
         let update = doc! { "$set": { 
                 "assets.$.nftAddr": nft_addr
             }
         };
 
-        let res =  projected_collection.update_one(filter, update, options).await.unwrap();
+        let res =  projected_collection
+            .update_one(filter, update)
+            .upsert(false)//Options with fluent API chaining
+            .await.map_err(TrustServiceError::MongoDbError)?;
+
         println!("Updated documents: {}", res.modified_count);
         let ass = Asset{ asset_id, proof_id: "todo()!".to_string(), nft_addr:  None };
         Ok(ass)
@@ -253,7 +254,7 @@ impl MongoRepo {
             }
         };
 
-        self.user_collection.update_one(filter, update, None).await?;
+        self.user_collection.update_one(filter, update).await.map_err(TrustServiceError::MongoDbError)?;
         Ok(())
     }
 
@@ -276,13 +277,13 @@ impl MongoRepo {
 
         // look for the document to update or add
         // find_one_... because there must be only one document in the DB
-        match self.log_collection.find_one_and_replace(filter, &log, None).await {
+        match self.log_collection.find_one_and_replace(filter, &log).await {
             Ok(Some(_)) => { //Document found and updated
                 log::info!("Log Updated in the db");
                 Ok(())
             }
             Ok(None) => { // Document not found and inserted
-                match self.log_collection.insert_one(&log, None).await {
+                match self.log_collection.insert_one(&log).await {
                     Ok(_) => {
                         log::info!("Log Inserted in the db");
                         Ok(())
@@ -313,7 +314,7 @@ impl MongoRepo {
         log::info!("Looking in the DB");
 
         // look for the document
-        match self.log_collection.find_one(filter, None).await {
+        match self.log_collection.find_one(filter).await {
             Ok(Some(log)) => {// document found
                 log::info!("Log file from the DB {:?}", log);
                 Ok(log.cid)

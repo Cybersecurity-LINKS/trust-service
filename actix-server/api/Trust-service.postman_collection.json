@@ -42,7 +42,7 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "http://127.0.0.1:8081/api/dids/did:iota:rms:0x6c37a93b5b79d1e39fa66b5b3a6fbe2d3cbdf20481a00ff420712f768af0705b",
+					"raw": "http://127.0.0.1:8081/api/dids/did:iota:lnk:0xe00971ab8ec13c0073c16cbabf565bc80e81485f1070ff2d1e8de7c3e99c08d9",
 					"protocol": "http",
 					"host": [
 						"127",
@@ -54,7 +54,7 @@
 					"path": [
 						"api",
 						"dids",
-						"did:iota:rms:0x6c37a93b5b79d1e39fa66b5b3a6fbe2d3cbdf20481a00ff420712f768af0705b"
+						"did:iota:lnk:0xe00971ab8ec13c0073c16cbabf565bc80e81485f1070ff2d1e8de7c3e99c08d9"
 					]
 				}
 			},
@@ -67,7 +67,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{ \r\n  \"assetId\": \"id-asset-1\",\r\n  \"assetHash\": \"ffffffffffffffffffffffffffffffffffffffffffff\",\r\n  \"metadataHash\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\r\n  \"did\": \"did:iota:rms:0x96782e549a59cd2ac51f2e492562f30ee3dce5870d321a9f5012b5064cdc14c1\"\r\n}",
+					"raw": "{ \r\n  \"assetId\": \"id-asset-1\",\r\n  \"assetHash\": \"ffffffffffffffffffffffffffffffffffffffffffff\",\r\n  \"metadataHash\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\r\n  \"did\": \"did:iota:lnk:0xe00971ab8ec13c0073c16cbabf565bc80e81485f1070ff2d1e8de7c3e99c08d9\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -105,7 +105,7 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "http://127.0.0.1:8081/api/proofs/0x5740868533453e9ee44b34d5c29e2a3329bd1b7eab5a8d4a659007d2d2eb9db20000",
+					"raw": "http://127.0.0.1:8081/api/proofs/0x5698cac0766369fda5c8c393e1a50d04f3f1467f4d220edc663de688879549b80000",
 					"protocol": "http",
 					"host": [
 						"127",
@@ -117,7 +117,7 @@
 					"path": [
 						"api",
 						"proofs",
-						"0x5740868533453e9ee44b34d5c29e2a3329bd1b7eab5a8d4a659007d2d2eb9db20000"
+						"0x5698cac0766369fda5c8c393e1a50d04f3f1467f4d220edc663de688879549b80000"
 					]
 				}
 			},
@@ -166,7 +166,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n \"assetId\": \"id-asset-1\",\r\n \"nftAlias\": \"ntf-asset-1\",\r\n \"nftSymbol\": \"AST-1\",\r\n \"license\": \"CC-BY-4.0\",\r\n \"did\": \"did:iota:rms:0xcaeb852bbfd200c1297056d5c455a01f33055c2c00b10f8664ad4a23026f913a\"\r\n}",
+					"raw": "{\r\n \"assetId\": \"id-asset-1\",\r\n \"nftAlias\": \"ntf-asset-1\",\r\n \"nftSymbol\": \"AST-1\",\r\n \"license\": \"CC-BY-4.0\",\r\n \"did\": \"did:iota:lnk:0xe00971ab8ec13c0073c16cbabf565bc80e81485f1070ff2d1e8de7c3e99c08d9\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"

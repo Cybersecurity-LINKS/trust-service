@@ -196,7 +196,8 @@ impl IotaState {
     did: &str
   ) -> Result<IotaDocument, TrustServiceError> {
     log::info!("Resolving did...");
-    log::info!("{}/identity-resolver/{}", std::env::var("EXPLORER_URL").unwrap(), did);
+    //log::info!("{}/identity-resolver/{}", std::env::var("EXPLORER_URL").unwrap(), did);
+    log::info!("DID: {}", did);
     match self.client.resolve_did(&IotaDID::try_from(did)?).await {
         Ok(iota_document) => Ok(iota_document),
         Err(err) => {
