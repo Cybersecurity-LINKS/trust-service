@@ -62,20 +62,31 @@ impl IpfsService {
         //unpin a file in IPFS = tell the garbage collector that the file can be deleted if space is needed,
         // if the garbage collector has not yet deleted the file it is still possible to retrieve it, because it is not actually deleted.
         let res = self.client.pin_rm(&cid, true).await;
-        match  res { 
-            Ok(_) => log::info!("File unpin ok {}", cid),
+        match res { 
+            Ok(_) => {
+                log::info!("File unpin ok {}", cid);
+                log::info!("PinRm Response: {:?}", res.unwrap());
+                log::info!("IPFS unpinned file: {:?}", cid);
+            },
             Err(e) => {
-                log::error!("File unpin error {}", e);
-                return Err(TrustServiceError::IpfsUnpinError)
+                // Log as warning instead of error - this is not a fatal condition
+                // The file might already be unpinned, not pinned directly, or garbage collected
+                log::warn!("File unpin failed for CID {}: {}. This is not critical - continuing with cleanup.", cid, e);
             }
         }
-        log::info!("PinRm Response: {:?}", res.unwrap());
-        log::info!("IPFS unpinned file: {:?}", cid);
         
         //block_rm delete a file in IPFS before the garbage collector does it, after this, the file is deleted and cannot be restored
-        let res = self.client.block_rm(&cid) .await.map_err(|e| TrustServiceError::IpfsBlockRmError)?;
-        log::info!("BlockRm Response: {:?}", res);
-        log::info!("IPFS removed file block: {:?}", cid);
+        let res = self.client.block_rm(&cid).await;
+        match res {
+            Ok(response) => {
+                log::info!("BlockRm Response: {:?}", response);
+                log::info!("IPFS removed file block: {:?}", cid);
+            },
+            Err(e) => {
+                // Log as warning - the block might already be removed or not exist
+                log::warn!("Block removal failed for CID {}: {}. Block may already be removed.", cid, e);
+            }
+        }
 
         Ok(())
     }
