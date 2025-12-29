@@ -30,7 +30,7 @@ use iota_sdk::types::block::output::feature::{MetadataFeature, TagFeature};
 use iota_sdk::types::block::output::unlock_condition::{AddressUnlockCondition, TimelockUnlockCondition};
 use iota_sdk::wallet::{Account, ClientOptions};
 use iota_sdk::Wallet;
-use iota_sdk::client::Password;
+use iota_sdk::client::{ClientBuilder, Password};
 use iota_sdk::client::secret::stronghold::StrongholdSecretManager;
 use iota_sdk::client::Client;
 use iota_sdk::types::block::address::Bech32Address;
@@ -328,10 +328,13 @@ impl IotaState {
 
   pub async fn create_or_recover_wallet() -> Result<Wallet> {
 
+    let client_options = ClientOptions::new().with_node(&std::env::var("NODE_URL").unwrap())?;
+
     let wallet = if PathBuf::from(&std::env::var("WALLET_DB_PATH").unwrap()).exists() {
         log::info!("Recovering wallet...");
         let wallet = Wallet::builder()
         .with_storage_path(&std::env::var("WALLET_DB_PATH").unwrap())
+        .with_client_options(client_options)
         .finish()
         .await?;
 
